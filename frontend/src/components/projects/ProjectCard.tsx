@@ -29,7 +29,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   const categoryLabel = PROJECT_CATEGORIES.find(cat => cat.value === project.category)?.label || project.category;
   const statusConfig = PROJECT_STATUS.find(s => s.value === project.status);
 
-  const canEdit = isAuthor && project.status === 'DRAFT';
+  const canEdit = (isAuthor || isAdmin) && project.status === 'DRAFT';
   const canDelete = isAuthor && project.status === 'DRAFT';
   const canSubmit = isAuthor && project.status === 'DRAFT';
   const canUpdateStatus = isAdmin && project.status === 'SUBMITTED';
