@@ -1,33 +1,19 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { ProjectService } from '../services/projectService';
 import { AuthRequest } from '../middleware/auth';
 
 export const createProject = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
-    const userRole = req.user?.role;
-
     if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuário não autenticado'
-      });
+      return res.status(401).json({ success: false, message: 'Não autenticado' });
     }
 
     const project = await ProjectService.createProject(req.body, userId);
-
-    res.status(201).json({
-      success: true,
-      message: 'Projeto criado com sucesso',
-      data: { project }
-    });
-
+    res.status(201).json({ success: true, data: project });
   } catch (error) {
-    console.error('Erro ao criar projeto:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro interno do servidor'
-    });
+    const message = error instanceof Error ? error.message : 'Erro interno';
+    res.status(400).json({ success: false, message });
   }
 };
 
@@ -35,205 +21,141 @@ export const getProjects = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
     const userRole = req.user?.role;
-
+    
     if (!userId || !userRole) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuário não autenticado'
-      });
+      return res.status(401).json({ success: false, message: 'Não autenticado' });
     }
 
-    const filters = req.query as any;
-    const result = await ProjectService.getProjects(filters, userRole, userId);
-
-    res.json({
-      success: true,
-      data: result
-    });
-
+    const projects = await ProjectService.getProjects(userRole, userId);
+    res.json({ success: true, data: projects });
   } catch (error) {
-    console.error('Erro ao listar projetos:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro interno do servidor'
-    });
+    res.status(500).json({ success: false, message: 'Erro interno' });
   }
 };
 
 export const getProjectById = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
     const userId = req.user?.userId;
     const userRole = req.user?.role;
+    const projectId = req.params.id;
 
     if (!userId || !userRole) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuário não autenticado'
-      });
+      return res.status(401).json({ success: false, message: 'Não autenticado' });
     }
 
-    const project = await ProjectService.getProjectById(parseInt(id), userRole, userId);
+    if (!projectId || typeof projectId !== 'string') {
+      return res.status(400).json({ success: false, message: 'ID inválido' });
+    }
 
+    const project = await ProjectService.getProjectById(projectId, userRole, userId);
+    
     if (!project) {
-      return res.status(404).json({
-        success: false,
-        message: 'Projeto não encontrado'
-      });
+      return res.status(404).json({ success: false, message: 'Projeto não encontrado' });
     }
 
-    res.json({
-      success: true,
-      data: { project }
-    });
-
+    res.json({ success: true, data: project });
   } catch (error) {
-    console.error('Erro ao buscar projeto:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro interno do servidor'
-    });
+    res.status(500).json({ success: false, message: 'Erro interno' });
   }
 };
 
 export const updateProject = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
     const userId = req.user?.userId;
     const userRole = req.user?.role;
+    const projectId = req.params.id;
 
     if (!userId || !userRole) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuário não autenticado'
-      });
+      return res.status(401).json({ success: false, message: 'Não autenticado' });
     }
 
-    const project = await ProjectService.updateProject(
-      parseInt(id), 
-      req.body, 
-      userRole, 
-      userId
-    );
+    if (!projectId || typeof projectId !== 'string') {
+      return res.status(400).json({ success: false, message: 'ID inválido' });
+    }
 
-    res.json({
-      success: true,
-      message: 'Projeto atualizado com sucesso',
-      data: { project }
-    });
-
+    const project = await ProjectService.updateProject(projectId, req.body, userRole, userId);
+    res.json({ success: true, data: project });
   } catch (error) {
-    console.error('Erro ao atualizar projeto:', error);
-    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
-    const statusCode = message.includes('não encontrado') ? 404 :
-                      message.includes('não pode') ? 403 : 500;
-    
-    res.status(statusCode).json({
-      success: false,
-      message
-    });
+    const message = error instanceof Error ? error.message : 'Erro interno';
+    const statusCode = message.includes('não encontrado') ? 404 : 400;
+    res.status(statusCode).json({ success: false, message });
   }
 };
 
 export const deleteProject = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
     const userId = req.user?.userId;
     const userRole = req.user?.role;
+    const projectId = req.params.id;
 
     if (!userId || !userRole) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuário não autenticado'
-      });
+      return res.status(401).json({ success: false, message: 'Não autenticado' });
     }
 
-    const result = await ProjectService.deleteProject(parseInt(id), userRole, userId);
+    if (!projectId || typeof projectId !== 'string') {
+      return res.status(400).json({ success: false, message: 'ID inválido' });
+    }
 
-    res.json({
-      success: true,
-      message: result.message
-    });
-
+    const result = await ProjectService.deleteProject(projectId, userRole, userId);
+    res.json({ success: true, message: result.message });
   } catch (error) {
-    console.error('Erro ao excluir projeto:', error);
-    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
-    const statusCode = message.includes('não encontrado') ? 404 :
-                      message.includes('não pode') ? 403 : 500;
-    
-    res.status(statusCode).json({
-      success: false,
-      message
-    });
+    const message = error instanceof Error ? error.message : 'Erro interno';
+    const statusCode = message.includes('não encontrado') ? 404 : 400;
+    res.status(statusCode).json({ success: false, message });
   }
 };
 
 export const submitProject = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
     const userId = req.user?.userId;
+    const projectId = req.params.id;
 
     if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuário não autenticado'
-      });
+      return res.status(401).json({ success: false, message: 'Não autenticado' });
     }
 
-    const project = await ProjectService.submitProject(parseInt(id), userId);
+    if (!projectId || typeof projectId !== 'string') {
+      return res.status(400).json({ success: false, message: 'ID inválido' });
+    }
 
-    res.json({
-      success: true,
-      message: 'Projeto enviado para avaliação com sucesso',
-      data: { project }
-    });
-
+    const project = await ProjectService.submitProject(projectId, userId);
+    res.json({ success: true, data: project });
   } catch (error) {
-    console.error('Erro ao enviar projeto:', error);
-    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
-    const statusCode = message.includes('não encontrado') ? 404 :
-                      message.includes('não pode') ? 403 : 500;
-    
-    res.status(statusCode).json({
-      success: false,
-      message
-    });
+    const message = error instanceof Error ? error.message : 'Erro interno';
+    res.status(400).json({ success: false, message });
   }
 };
 
 export const updateProjectStatus = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
     const userRole = req.user?.role;
+    const projectId = req.params.id;
+    const { status } = req.body;
 
     if (!userRole) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuário não autenticado'
-      });
+      return res.status(401).json({ success: false, message: 'Não autenticado' });
     }
 
-    const project = await ProjectService.updateProjectStatus(
-      parseInt(id), 
-      req.body, 
-      userRole
-    );
+    if (!projectId || typeof projectId !== 'string') {
+      return res.status(400).json({ success: false, message: 'ID inválido' });
+    }
 
-    res.json({
-      success: true,
-      message: 'Status do projeto atualizado com sucesso',
-      data: { project }
-    });
-
+    const project = await ProjectService.updateStatus(projectId, status, userRole);
+    res.json({ success: true, data: project });
   } catch (error) {
-    console.error('Erro ao atualizar status:', error);
-    const message = error instanceof Error ? error.message : 'Erro interno do servidor';
-    const statusCode = message.includes('Apenas administradores') ? 403 : 500;
-    
-    res.status(statusCode).json({
-      success: false,
-      message
-    });
+    const message = error instanceof Error ? error.message : 'Erro interno';
+    const statusCode = message.includes('administradores') ? 403 : 400;
+    res.status(statusCode).json({ success: false, message });
+  }
+};
+
+export const getAreasConhecimento = async (req: any, res: Response) => {
+  try {
+    const nivel = req.query.nivel ? parseInt(req.query.nivel) : undefined;
+    const areas = await ProjectService.getAreas(nivel);
+    res.json({ success: true, data: areas });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erro interno' });
   }
 };
 
@@ -241,26 +163,14 @@ export const getProjectStats = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
     const userRole = req.user?.role;
-
+    
     if (!userId || !userRole) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuário não autenticado'
-      });
+      return res.status(401).json({ success: false, message: 'Não autenticado' });
     }
 
     const stats = await ProjectService.getProjectStats(userRole, userId);
-
-    res.json({
-      success: true,
-      data: { stats }
-    });
-
+    res.json({ success: true, data: stats });
   } catch (error) {
-    console.error('Erro ao obter estatísticas:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro interno do servidor'
-    });
+    res.status(500).json({ success: false, message: 'Erro interno' });
   }
 };

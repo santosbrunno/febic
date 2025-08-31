@@ -7,7 +7,8 @@ import {
   deleteProject,
   submitProject,
   updateProjectStatus,
-  getProjectStats
+  getProjectStats,
+  getAreasConhecimento
 } from '../controllers/projectController';
 import { authenticateToken, requireRole } from '../middleware/auth';
 import { validateRequest, validateQuery } from '../middleware/validation';
@@ -28,6 +29,9 @@ router.get('/', validateQuery(projectFiltersSchema), getProjects);
 router.post('/', validateRequest(createProjectSchema), createProject);
 router.get('/stats', getProjectStats);
 
+// Rota para áreas do conhecimento
+router.get('/areas', getAreasConhecimento);
+
 // Rotas específicas de projetos
 router.get('/:id', getProjectById);
 router.put('/:id', validateRequest(updateProjectSchema), updateProject);
@@ -36,7 +40,7 @@ router.delete('/:id', deleteProject);
 // Ações específicas
 router.post('/:id/submit', submitProject);
 
-// Rotas admin apenas
-router.put('/:id/status', requireRole(['ADMIN']), validateRequest(updateStatusSchema), updateProjectStatus);
+// Rotas admin apenas - usando role correto
+router.put('/:id/status', requireRole(['ADMINISTRADOR']), validateRequest(updateStatusSchema), updateProjectStatus);
 
 export default router;

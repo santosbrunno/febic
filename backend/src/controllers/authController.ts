@@ -14,14 +14,14 @@ export const login = async (req: Request, res: Response) => {
       where: { email }
     });
 
-    if (!user || !user.isActive) {
+    if (!user || !user.isActive) {  // ✅ camelCase correto
       return res.status(401).json({
         success: false,
         message: 'Email ou senha inválidos'
       });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);  // ✅ campo correto
 
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -30,13 +30,22 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
+    // Atualizar dados de login
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        lastLogin: new Date(),
+        loginCount: user.loginCount + 1
+      }
+    });
+
     const token = generateToken({
-      userId: user.id,
+      userId: user.id,  // string agora
       email: user.email,
       role: user.role
     });
 
-    const { passwordHash, ...userWithoutPassword } = user;
+    const { passwordHash, ...userWithoutPassword } = user;  // ✅ nome correto do campo
 
     res.json({
       success: true,
@@ -60,8 +69,14 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { email, cpf, name, phone, password } = req.body;
 
+    // Verificar se usuário já existe
     const existingUser = await prisma.user.findFirst({
-      where: { OR: [{ email }, { cpf }] }
+      where: { 
+        OR: [
+          { email }, 
+          ...(cpf ? [{ cpf }] : [])
+        ] 
+      }
     });
 
     if (existingUser) {
@@ -71,7 +86,7 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
       data: {
@@ -79,8 +94,8 @@ export const register = async (req: Request, res: Response) => {
         cpf,
         name,
         phone,
-        passwordHash,
-        role: 'AUTHOR'
+        passwordHash: hashedPassword,  // ✅ campo correto
+        role: 'AUTOR'  // enum correto
       },
       select: {
         id: true,
@@ -89,14 +104,14 @@ export const register = async (req: Request, res: Response) => {
         name: true,
         phone: true,
         role: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true
+        isActive: true,     // ✅ camelCase correto
+        createdAt: true,    // ✅ camelCase correto
+        updatedAt: true     // ✅ camelCase correto
       }
     });
 
     const token = generateToken({
-      userId: user.id,
+      userId: user.id,  // string
       email: user.email,
       role: user.role
     });
@@ -118,22 +133,51 @@ export const register = async (req: Request, res: Response) => {
 
 export const getMe = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.userId;  // ainda vem como number do middleware
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Usuário não autenticado'
+      });
+    }
 
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: String(userId) },  // ✅ converter para string temporariamente
       select: {
         id: true,
         email: true,
         cpf: true,
         name: true,
         phone: true,
+        birthDate: true,
+        gender: true,
+        nationality: true,
+        address: true,
+        neighborhood: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        country: true,
+        institution: true,
+        position: true,
+        formation: true,
         role: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true
+        isActive: true,       // ✅ camelCase correto
+        emailVerified: true,
+        lastLogin: true,
+        loginCount: true,
+        createdAt: true,      // ✅ camelCase correto
+        updatedAt: true       // ✅ camelCase correto
       }
     });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuário não encontrado'
+      });
+    }
 
     res.json({
       success: true,
@@ -141,6 +185,7 @@ export const getMe = async (req: AuthRequest, res: Response) => {
     });
 
   } catch (error) {
+    console.error('Erro ao buscar usuário:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'

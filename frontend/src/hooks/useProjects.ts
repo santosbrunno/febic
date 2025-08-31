@@ -1,124 +1,266 @@
-
-import { useState, useEffect } from 'react';
-import { projectService } from '../services/projectService';
-import { Project, CreateProjectData, UpdateProjectData, ProjectFilters, ProjectStats } from '../types/Project';
+import { useState, useEffect, useCallback } from 'react';
+import { 
+  Project, 
+  CreateProjectData, 
+  UpdateProjectData, 
+  ProjectFilters, 
+  ProjectsListResponse, 
+  ProjectStats,
+  AreaConhecimento 
+} from '../types/Project';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 
-export const useProjects = (filters?: ProjectFilters) => {
+export const useProjects = (initialFilters?: ProjectFilters) => {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  });
+  const [filters, setFilters] = useState<ProjectFilters>(initialFilters || {});
 
-  const fetchProjects = async () => {
+  // ===== BUSCAR PROJETOS =====
+  const fetchProjects = useCallback(async (newFilters?: ProjectFilters) => {
     try {
       setLoading(true);
-      const response = await projectService.getProjects(filters);
-      setProjects(response.projects);
-      setPagination(response.pagination);
-    } catch (error) {
+      
+      const queryParams = { ...filters, ...newFilters };
+      
+      // Remover parâmetros vazios
+      const cleanParams = Object.entries(queryParams).reduce((acc, [key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+
+      const response = await api.get('/projects', { params: cleanParams });  // ✅ Removido /api/
+      
+      if (response.data.success) {
+        const data: ProjectsListResponse = response.data.data;
+        setProjects(data.projects);
+        setPagination(data.pagination);
+      }
+    } catch (error: any) {
       console.error('Erro ao buscar projetos:', error);
-      toast.error('Erro ao carregar projetos');
+      toast.error(
+        error.response?.data?.message || 'Erro ao carregar projetos'
+      );
+      setProjects([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const createProject = async (data: CreateProjectData) => {
+  // ===== BUSCAR PROJETO POR ID =====
+  const getProject = async (id: string): Promise<Project | null> => {  // ✅ Corrigido para string (CUID)
     try {
-      const response = await projectService.createProject(data);
-      setProjects(prev => [response.project, ...prev]);
-      toast.success('Projeto criado com sucesso!');
-      return response.project;
+      const response = await api.get(`/projects/${id}`);  // ✅ Removido /api/
+      
+      if (response.data.success) {
+        return response.data.data.project;
+      }
+      return null;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Erro ao criar projeto';
-      toast.error(message);
-      throw error;
+      console.error('Erro ao buscar projeto:', error);
+      toast.error(
+        error.response?.data?.message || 'Erro ao carregar projeto'
+      );
+      return null;
     }
   };
 
-  const updateProject = async (id: number, data: UpdateProjectData) => {
+  // ===== CRIAR PROJETO =====
+  const createProject = async (data: CreateProjectData): Promise<Project | null> => {
     try {
-      const response = await projectService.updateProject(id, data);
-      setProjects(prev => prev.map(p => p.id === id ? response.project : p));
-      toast.success('Projeto atualizado com sucesso!');
-      return response.project;
+      const response = await api.post('/projects', data);  // ✅ Removido /api/
+      
+      if (response.data.success) {
+        const newProject: Project = response.data.data.project;
+        
+        // Adicionar à lista se estiver na primeira página
+        if (pagination.page === 1) {
+          setProjects(prev => [newProject, ...prev.slice(0, pagination.limit - 1)]);
+        }
+        
+        toast.success('Projeto criado com sucesso!');
+        return newProject;
+      }
+      return null;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Erro ao atualizar projeto';
-      toast.error(message);
-      throw error;
+      console.error('Erro ao criar projeto:', error);
+      toast.error(
+        error.response?.data?.message || 'Erro ao criar projeto'
+      );
+      return null;
     }
   };
 
-  const deleteProject = async (id: number) => {
+  // ===== ATUALIZAR PROJETO =====
+  const updateProject = async (id: string, data: UpdateProjectData): Promise<boolean> => {  // ✅ Corrigido para string
     try {
-      await projectService.deleteProject(id);
-      setProjects(prev => prev.filter(p => p.id !== id));
-      toast.success('Projeto excluído com sucesso!');
+      const response = await api.put(`/projects/${id}`, data);  // ✅ Removido /api/
+      
+      if (response.data.success) {
+        const updatedProject: Project = response.data.data.project;
+        
+        // Atualizar na lista
+        setProjects(prev => 
+          prev.map(p => p.id === id ? updatedProject : p)
+        );
+        
+        toast.success('Projeto atualizado com sucesso!');
+        return true;
+      }
+      return false;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Erro ao excluir projeto';
-      toast.error(message);
-      throw error;
+      console.error('Erro ao atualizar projeto:', error);
+      toast.error(
+        error.response?.data?.message || 'Erro ao atualizar projeto'
+      );
+      return false;
     }
   };
 
-  const submitProject = async (id: number) => {
+  // ===== EXCLUIR PROJETO =====
+  const deleteProject = async (id: string): Promise<boolean> => {  // ✅ Corrigido para string
     try {
-      const response = await projectService.submitProject(id);
-      setProjects(prev => prev.map(p => p.id === id ? response.project : p));
-      toast.success('Projeto enviado para avaliação!');
-      return response.project;
+      const response = await api.delete(`/projects/${id}`);  // ✅ Removido /api/
+      
+      if (response.data.success) {
+        // Remover da lista
+        setProjects(prev => prev.filter(p => p.id !== id));
+        
+        toast.success('Projeto excluído com sucesso!');
+        return true;
+      }
+      return false;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Erro ao enviar projeto';
-      toast.error(message);
-      throw error;
+      console.error('Erro ao excluir projeto:', error);
+      toast.error(
+        error.response?.data?.message || 'Erro ao excluir projeto'
+      );
+      return false;
     }
   };
 
-  const updateStatus = async (id: number, status: string) => {
+  // ===== ENVIAR PROJETO =====
+  const submitProject = async (id: string): Promise<boolean> => {  // ✅ Corrigido para string
     try {
-      const response = await projectService.updateProjectStatus(id, status);
-      setProjects(prev => prev.map(p => p.id === id ? response.project : p));
-      toast.success('Status atualizado com sucesso!');
-      return response.project;
+      const response = await api.post(`/projects/${id}/submit`);  // ✅ Removido /api/
+      
+      if (response.data.success) {
+        const updatedProject: Project = response.data.data.project;
+        
+        // Atualizar na lista
+        setProjects(prev => 
+          prev.map(p => p.id === id ? updatedProject : p)
+        );
+        
+        toast.success('Projeto enviado para avaliação!');
+        return true;
+      }
+      return false;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Erro ao atualizar status';
-      toast.error(message);
-      throw error;
+      console.error('Erro ao enviar projeto:', error);
+      toast.error(
+        error.response?.data?.message || 'Erro ao enviar projeto'
+      );
+      return false;
     }
   };
 
+  // ===== ATUALIZAR STATUS (ADMIN) =====
+  const updateProjectStatus = async (id: string, status: string): Promise<boolean> => {  // ✅ Corrigido para string
+    try {
+      const response = await api.put(`/projects/${id}/status`, { status });  // ✅ Removido /api/
+      
+      if (response.data.success) {
+        const updatedProject: Project = response.data.data.project;
+        
+        // Atualizar na lista
+        setProjects(prev => 
+          prev.map(p => p.id === id ? updatedProject : p)
+        );
+        
+        const statusLabel = status === 'SELECIONADO' ? 'aprovado' : 
+                           status === 'DESCLASSIFICADO' ? 'rejeitado' : 'atualizado';
+        toast.success(`Projeto ${statusLabel} com sucesso!`);
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      console.error('Erro ao atualizar status:', error);
+      toast.error(
+        error.response?.data?.message || 'Erro ao atualizar status'
+      );
+      return false;
+    }
+  };
+
+  // ===== APLICAR FILTROS =====
+  const applyFilters = (newFilters: ProjectFilters) => {
+    const updatedFilters = { ...filters, ...newFilters, page: 1 };
+    setFilters(updatedFilters);
+    fetchProjects(updatedFilters);
+  };
+
+  // ===== MUDAR PÁGINA =====
+  const changePage = (newPage: number) => {
+    const updatedFilters = { ...filters, page: newPage };
+    setFilters(updatedFilters);
+    fetchProjects(updatedFilters);
+  };
+
+  // ===== RECARREGAR =====
   const refetch = () => {
     fetchProjects();
   };
 
+  // ===== EFEITO INICIAL =====
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
   return {
+    // Dados
     projects,
     loading,
     pagination,
+    filters,
+    
+    // Ações
     createProject,
+    getProject,
     updateProject,
     deleteProject,
     submitProject,
-    updateStatus,
+    updateProjectStatus,
+    applyFilters,
+    changePage,
     refetch
   };
 };
 
+// ===== HOOK PARA ESTATÍSTICAS =====
 export const useProjectStats = () => {
   const [stats, setStats] = useState<ProjectStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await projectService.getProjectStats();
-      setStats(response.stats);
-    } catch (error) {
+      const response = await api.get('/projects/stats');  // ✅ Removido /api/
+      
+      if (response.data.success) {
+        setStats(response.data.data.stats);
+      }
+    } catch (error: any) {
       console.error('Erro ao buscar estatísticas:', error);
+      toast.error('Erro ao carregar estatísticas');
     } finally {
       setLoading(false);
     }
@@ -129,4 +271,37 @@ export const useProjectStats = () => {
   }, []);
 
   return { stats, loading, refetch: fetchStats };
+};
+
+// ===== HOOK PARA ÁREAS DO CONHECIMENTO =====
+export const useAreasConhecimento = (nivel?: number, parent?: string) => {
+  const [areas, setAreas] = useState<AreaConhecimento[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchAreas = async () => {
+    try {
+      setLoading(true);
+      const params: any = {};
+      if (nivel) params.nivel = nivel;
+      if (parent) params.parent = parent;
+
+      const response = await api.get('/projects/areas', { params });  // ✅ Corrigido para /projects/areas
+      
+      if (response.data.success) {
+        setAreas(response.data.data.areas);
+      }
+    } catch (error: any) {
+      console.error('Erro ao buscar áreas do conhecimento:', error);
+      toast.error('Erro ao carregar áreas do conhecimento');
+      setAreas([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAreas();
+  }, [nivel, parent]);
+
+  return { areas, loading, refetch: fetchAreas };
 };
