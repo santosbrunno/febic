@@ -93,7 +93,7 @@ const AuthorDashboard: React.FC = () => {
                       Em Avaliação
                     </dt>
                     <dd className="text-lg font-medium text-gray-900">
-                      {statsLoading ? '...' : stats?.byStatus.SUBMITTED || 0}
+                      {statsLoading ? '...' : stats?.byStatus.SUBMETIDO || 0}
                     </dd>
                   </dl>
                 </div>
@@ -113,7 +113,7 @@ const AuthorDashboard: React.FC = () => {
                       Aprovados
                     </dt>
                     <dd className="text-lg font-medium text-gray-900">
-                      {statsLoading ? '...' : stats?.byStatus.APPROVED || 0}
+                      {statsLoading ? '...' : stats?.byStatus.APROVADO_CIAS || 0}
                     </dd>
                   </dl>
                 </div>

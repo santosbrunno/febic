@@ -1,7 +1,8 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Eye, EyeOff, User, Lock } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -45,36 +46,42 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+      <div className="container max-w-md bg-white rounded-xl shadow-elegant p-8 transition-all">
+        {/* Header do formulário */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">FEBIC</h1>
-          <p className="text-gray-600">Feira Brasileira de Iniciação Científica</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2 bg-gradient-primary bg-clip-text text-transparent">
+            Bem-vindo à FEBIC
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Faça login para acessar a Feira Brasileira de Iniciação Científica
+          </p>
         </div>
 
         {/* Botões de teste */}
         <div className="mb-6">
-          <p className="text-sm text-gray-600 mb-3">🧪 Credenciais de teste:</p>
-          <div className="flex gap-2">
-            <button
-              type="button"
+          <p className="text-sm text-muted-foreground mb-3">🧪 Credenciais de teste:</p>
+          <div className="flex gap-4">
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => fillTestCredentials('admin')}
-              className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm py-2 px-3 rounded-lg transition-colors"
+              className="flex-1 hover-lift hover-glow"
             >
               👨‍💼 Admin
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => fillTestCredentials('author')}
-              className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm py-2 px-3 rounded-lg transition-colors"
+              className="flex-1 hover-lift hover-glow"
             >
               👩‍💻 Autor
-            </button>
+            </Button>
           </div>
         </div>
 
-        {/* Form */}
+        {/* Formulário */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email */}
           <div className="form-group">
@@ -91,14 +98,14 @@ const Login: React.FC = () => {
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="input-field pl-10"
+                className="input-field pl-10 transition-smooth"
                 placeholder="seu@email.com"
                 required
               />
             </div>
           </div>
 
-          {/* Password */}
+          {/* Senha */}
           <div className="form-group">
             <label htmlFor="password" className="form-label">
               Senha
@@ -113,7 +120,7 @@ const Login: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={handleChange}
-                className="input-field pl-10 pr-10"
+                className="input-field pl-10 pr-10 transition-smooth"
                 placeholder="Sua senha"
                 required
               />
@@ -123,19 +130,19 @@ const Login: React.FC = () => {
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
               >
                 {showPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-smooth" />
                 ) : (
-                  <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-smooth" />
                 )}
               </button>
             </div>
           </div>
 
-          {/* Submit Button */}
-          <button
+          {/* Botão de submit */}
+          <Button
             type="submit"
             disabled={loading}
-            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full btn-primary hover-lift hover-glow disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <div className="flex items-center justify-center">
@@ -145,13 +152,30 @@ const Login: React.FC = () => {
             ) : (
               'Entrar'
             )}
-          </button>
+          </Button>
         </form>
+
+        {/* Links */}
+        <div className="mt-6 text-center space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Não tem conta?{' '}
+            <Link to="/auth/register" className="text-primary hover:underline transition-smooth">
+              Inscreva-se
+            </Link>
+          </p>
+          <Link
+            to="/"
+            className="text-primary hover:underline hover:text-primary-700 transition-smooth flex items-center justify-center gap-2 text-sm"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para a Home
+          </Link>
+        </div>
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-gray-500">
-            Sistema de Gestão de Feiras Científicas
+          <p className="text-sm text-muted-foreground">
+            Sistema de Gestão de Feiras Científicas &copy; 2025 FEBIC
           </p>
         </div>
       </div>

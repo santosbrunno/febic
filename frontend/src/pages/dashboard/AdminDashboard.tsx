@@ -102,7 +102,7 @@ const AdminDashboard: React.FC = () => {
                       Aguardando Avaliação
                     </dt>
                     <dd className="text-lg font-medium text-gray-900">
-                      {loading ? '...' : stats?.byStatus.SUBMITTED || 0}
+                      {loading ? '...' : stats?.byStatus.SUBMETIDO|| 0}
                     </dd>
                   </dl>
                 </div>
@@ -122,7 +122,7 @@ const AdminDashboard: React.FC = () => {
                       Projetos Aprovados
                     </dt>
                     <dd className="text-lg font-medium text-gray-900">
-                      {loading ? '...' : stats?.byStatus.APPROVED || 0}
+                      {loading ? '...' : stats?.byStatus.APROVADO_CIAS || 0}
                     </dd>
                   </dl>
                 </div>
