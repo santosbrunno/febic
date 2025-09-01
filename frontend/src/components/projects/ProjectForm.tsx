@@ -20,17 +20,17 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   
   const { register, handleSubmit, formState: { errors }, watch } = useForm<CreateProjectData>({
     defaultValues: isEditing ? {
-      title: project.title,
-      category: project.category,
-      abstract: project.abstract
+      titulo: project.titulo,
+      categoria: project.categoria,
+      resumo: project.resumo
     } : {
-      title: '',
-      category: '',
+      titulo: '',
+      categoria: '',
       abstract: ''
     }
   });
 
-  const watchedAbstract = watch('abstract', '');
+  const watchedAbstract = watch('resumo', '');
 
   const onFormSubmit = async (data: CreateProjectData) => {
     await onSubmit(data);
@@ -60,7 +60,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
               </label>
               <input
                 type="text"
-                {...register('title', {
+                {...register('titulo', {
                   required: 'Título é obrigatório',
                   minLength: { value: 10, message: 'Título deve ter pelo menos 10 caracteres' },
                   maxLength: { value: 500, message: 'Título deve ter no máximo 500 caracteres' }
@@ -68,8 +68,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Digite o título do seu projeto"
               />
-              {errors.title && (
-                <p className="text-red-600 text-sm mt-1">{errors.title.message}</p>
+              {errors.titulo && (
+                <p className="text-red-600 text-sm mt-1">{errors.titulo.message}</p>
               )}
             </div>
 
@@ -79,7 +79,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 Categoria *
               </label>
               <select
-                {...register('category', { required: 'Categoria é obrigatória' })}
+                {...register('categoria', { required: 'Categoria é obrigatória' })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Selecione uma categoria</option>
@@ -89,8 +89,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                   </option>
                 ))}
               </select>
-              {errors.category && (
-                <p className="text-red-600 text-sm mt-1">{errors.category.message}</p>
+              {errors.categoria && (
+                <p className="text-red-600 text-sm mt-1">{errors.categoria.message}</p>
               )}
             </div>
 
@@ -100,7 +100,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 Resumo do Projeto *
               </label>
               <textarea
-                {...register('abstract', {
+                {...register('resumo', {
                   required: 'Resumo é obrigatório',
                   minLength: { value: 50, message: 'Resumo deve ter pelo menos 50 caracteres' },
                   maxLength: { value: 3000, message: 'Resumo deve ter no máximo 3000 caracteres' }
@@ -110,8 +110,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 placeholder="Descreva seu projeto de forma detalhada..."
               />
               <div className="flex justify-between items-center mt-2">
-                {errors.abstract && (
-                  <p className="text-red-600 text-sm">{errors.abstract.message}</p>
+                {errors.resumo && (
+                  <p className="text-red-600 text-sm">{errors.resumo.message}</p>
                 )}
                 <p className="text-sm text-gray-500 ml-auto">
                   {watchedAbstract?.length || 0}/3000
@@ -131,7 +131,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                   <div className="ml-3">
                     <p className="text-sm text-yellow-700">
                       <strong>Atenção:</strong> Apenas projetos em rascunho podem ser editados. 
-                      {project?.status !== 'DRAFT' && ' Este projeto não pode mais ser modificado.'}
+                      {project?.status !== 'RASCUNHO' && ' Este projeto não pode mais ser modificado.'}
                     </p>
                   </div>
                 </div>
@@ -150,7 +150,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={loading || (isEditing && project?.status !== 'DRAFT')}
+                disabled={loading || (isEditing && project?.status !== 'RASCUNHO')}
                 className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading 
