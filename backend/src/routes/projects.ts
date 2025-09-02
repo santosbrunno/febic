@@ -31,6 +31,45 @@ router.get('/stats', getProjectStats);
 
 // Rota para áreas do conhecimento
 router.get('/areas', getAreasConhecimento);
+// Rotas para áreas hierárquicas CNPq
+router.get('/areas/principais', async (req, res) => {
+  try {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    
+    const areas = await prisma.areaConhecimento.findMany({
+      where: {
+        nivel: 1,
+        isActive: true
+      },
+      orderBy: { nome: 'asc' }
+    });
+    
+    res.json({ success: true, data: areas });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erro ao buscar áreas principais' });
+  }
+});
+
+router.get('/areas/subareas/:paiId', async (req, res) => {
+  try {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    const { paiId } = req.params;
+    
+    const subareas = await prisma.areaConhecimento.findMany({
+      where: {
+        paiId,
+        isActive: true
+      },
+      orderBy: { nome: 'asc' }
+    });
+    
+    res.json({ success: true, data: subareas });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erro ao buscar subáreas' });
+  }
+});
 
 // Rotas específicas de projetos
 router.get('/:id', getProjectById);

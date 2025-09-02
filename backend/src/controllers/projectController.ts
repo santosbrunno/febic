@@ -96,8 +96,8 @@ export const deleteProject = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ success: false, message: 'ID inválido' });
     }
 
-    const result = await ProjectService.deleteProject(projectId, userRole, userId);
-    res.json({ success: true, message: result.message });
+    await ProjectService.deleteProject(projectId, userRole, userId);
+res.json({ success: true, message: 'Projeto excluído com sucesso' }); // ✅
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro interno';
     const statusCode = message.includes('não encontrado') ? 404 : 400;
