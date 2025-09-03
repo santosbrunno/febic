@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useProjects, useProjectStats } from '../../hooks/useProjects';
 import { Plus, FileText, Clock, CheckCircle, LogOut, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ProjectForm from '../../components/projects/ProjectForm';
+import CreateProject from '../projects/CreateProject';
 import { CreateProjectData } from '../../types/Project';
 
 const AuthorDashboard: React.FC = () => {
@@ -196,7 +196,7 @@ const AuthorDashboard: React.FC = () => {
 
       {/* Create Form Modal */}
       {showCreateForm && (
-        <ProjectForm
+        <CreateProject
           onSubmit={handleCreateProject}
           onCancel={() => setShowCreateForm(false)}
         />

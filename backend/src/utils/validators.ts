@@ -6,6 +6,7 @@ const validCategories = Object.values(Category);
 const validStatuses = Object.values(ProjectStatus);
 
 export const createProjectSchema = Joi.object({
+  // Dados básicos do projeto
   title: Joi.string()
     .min(10)
     .max(500)
@@ -16,7 +17,7 @@ export const createProjectSchema = Joi.object({
       'any.required': 'Título é obrigatório'
     }),
   
-  abstract: Joi.string()
+  summary: Joi.string()  // Mudança: summary em vez de abstract
     .min(50)
     .max(3000)
     .required()
@@ -26,13 +27,188 @@ export const createProjectSchema = Joi.object({
       'any.required': 'Resumo é obrigatório'
     }),
     
+  objective: Joi.string()
+    .min(20)
+    .max(2000)
+    .required()
+    .messages({
+      'string.min': 'Objetivo deve ter pelo menos 20 caracteres',
+      'any.required': 'Objetivo é obrigatório'
+    }),
+    
+  methodology: Joi.string()
+    .min(50)
+    .max(3000)
+    .required()
+    .messages({
+      'string.min': 'Metodologia deve ter pelo menos 50 caracteres',
+      'any.required': 'Metodologia é obrigatória'
+    }),
+    
+  results: Joi.string().allow('').max(3000),
+  conclusion: Joi.string().allow('').max(2000),
+  bibliography: Joi.string().allow('').max(5000),
+    
   category: Joi.string()
     .valid(...validCategories)
     .required()
     .messages({
       'any.only': 'Categoria inválida',
       'any.required': 'Categoria é obrigatória'
+    }),
+    
+  areaConhecimentoId: Joi.string()
+    .required()
+    .messages({
+      'any.required': 'Área de conhecimento é obrigatória'
+    }),
+    
+  keywords: Joi.array().items(Joi.string()).default([]),
+  researchLine: Joi.string().allow('').max(200),
+  
+  // Dados da instituição
+  institution: Joi.string()
+    .min(3)
+    .max(200)
+    .required()
+    .messages({
+      'any.required': 'Instituição é obrigatória'
+    }),
+    
+  institutionCity: Joi.string().max(100).allow(''),
+  institutionState: Joi.string().max(2).allow(''),
+  institutionCountry: Joi.string().max(100).default('Brasil'),
+  
+  // Características da escola/projeto
+  isPublicSchool: Joi.boolean().default(false),
+  isRuralSchool: Joi.boolean().default(false),
+  isIndigenous: Joi.boolean().default(false),
+  hasDisability: Joi.boolean().default(false),
+  socialVulnerability: Joi.boolean().default(false),
+  
+  // Integrantes
+  members: Joi.array().items(
+    Joi.object({
+      userId: Joi.string().optional(),
+      name: Joi.string()
+        .min(2)
+        .max(200)
+        .required()
+        .messages({
+          'any.required': 'Nome do integrante é obrigatório'
+        }),
+      email: Joi.string().email().allow('').optional(),
+      cpf: Joi.string().allow('').optional(),
+      rg: Joi.string().allow('').optional(),
+      birthDate: Joi.date()
+        .required()
+        .messages({
+          'any.required': 'Data de nascimento é obrigatória'
+        }),
+      gender: Joi.string()
+        .valid('Masculino', 'Feminino', 'Outro', 'Prefiro não informar')
+        .required(),
+      phone: Joi.string().allow('').optional(),
+      address: Joi.string().allow('').optional(),
+      city: Joi.string()
+        .min(2)
+        .max(100)
+        .required()
+        .messages({
+          'any.required': 'Cidade do integrante é obrigatória'
+        }),
+      state: Joi.string()
+        .min(2)
+        .max(2)
+        .required()
+        .messages({
+          'any.required': 'Estado do integrante é obrigatório'
+        }),
+      zipCode: Joi.string().allow('').optional(),
+      schoolLevel: Joi.string()
+        .valid(
+          'Educação Infantil',
+          'Ensino Fundamental 1º-3º',
+          'Ensino Fundamental 4º-6º', 
+          'Ensino Fundamental 7º-9º',
+          'Ensino Médio',
+          'Ensino Técnico',
+          'EJA - Educação de Jovens e Adultos',
+          'Ensino Superior',
+          'Pós-graduação'
+        )
+        .required(),
+      schoolYear: Joi.string().allow('').optional(),
+      institution: Joi.string()
+        .min(2)
+        .max(200)
+        .required()
+        .messages({
+          'any.required': 'Instituição do integrante é obrigatória'
+        }),
+      isIndigenous: Joi.boolean().default(false),
+      hasDisability: Joi.boolean().default(false),
+      isRural: Joi.boolean().default(false)
     })
+  ).min(1).required().messages({
+    'array.min': 'Pelo menos um integrante é obrigatório'
+  }),
+  
+  // Orientadores
+  orientadores: Joi.array().items(
+    Joi.object({
+      userId: Joi.string().optional(),
+      name: Joi.string()
+        .min(2)
+        .max(200)
+        .required()
+        .messages({
+          'any.required': 'Nome do orientador é obrigatório'
+        }),
+      email: Joi.string()
+        .email()
+        .required()
+        .messages({
+          'any.required': 'Email do orientador é obrigatório'
+        }),
+      cpf: Joi.string().allow('').optional(),
+      phone: Joi.string().allow('').optional(),
+      formation: Joi.string()
+        .min(5)
+        .max(200)
+        .required()
+        .messages({
+          'any.required': 'Formação do orientador é obrigatória'
+        }),
+      area: Joi.string()
+        .min(3)
+        .max(200)
+        .required()
+        .messages({
+          'any.required': 'Área de atuação do orientador é obrigatória'
+        }),
+      institution: Joi.string()
+        .min(2)
+        .max(200)
+        .required()
+        .messages({
+          'any.required': 'Instituição do orientador é obrigatória'
+        }),
+      position: Joi.string().allow('').optional(),
+      city: Joi.string().max(100).allow(''),
+      state: Joi.string().max(2).allow(''),
+      yearsExperience: Joi.number().integer().min(0).default(0),
+      lattesUrl: Joi.string().uri().allow('').optional()
+    })
+  ).min(1).max(2).required().messages({
+    'array.min': 'Pelo menos um orientador é obrigatório',
+    'array.max': 'Máximo de 2 orientadores permitido'
+  }),
+  
+  // Campos de pagamento
+  paymentRequired: Joi.boolean().default(true),
+  isPaymentExempt: Joi.boolean().default(false),
+  exemptionReason: Joi.string().allow('').optional()
 });
 
 export const updateProjectSchema = Joi.object({

@@ -1,8 +1,4 @@
 import { useState, useCallback, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowLeft, User, MapPin, GraduationCap, CheckCircle } from "lucide-react";
 import api from '@/services/api';
@@ -176,7 +172,7 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     let formattedValue = value;
     
@@ -185,11 +181,6 @@ const Register = () => {
     else if (name === 'zipCode') formattedValue = formatZipCode(value);
     
     setFormData(prev => ({ ...prev, [name]: formattedValue }));
-    setErrors(prev => ({ ...prev, [name]: undefined }));
-  }, []);
-
-  const handleSelectChange = useCallback((name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
     setErrors(prev => ({ ...prev, [name]: undefined }));
   }, []);
 
@@ -267,72 +258,72 @@ const Register = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="name" className="form-label">Nome Completo *</Label>
-        <Input
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nome Completo *</label>
+        <input
           id="name"
           name="name"
           type="text"
           placeholder="Seu nome completo"
           value={formData.name}
           onChange={handleInputChange}
-          className={`input-field ${errors.name ? "border-destructive" : ""}`}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.name ? "border-red-500" : "border-gray-300"}`}
         />
-        {errors.name && <p className="form-error text-sm text-red-500">{errors.name}</p>}
+        {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email" className="form-label">Email *</Label>
-        <Input
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email *</label>
+        <input
           id="email"
           name="email"
           type="email"
           placeholder="seu@email.com"
           value={formData.email}
           onChange={handleInputChange}
-          className={`input-field ${errors.email ? "border-destructive" : ""}`}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? "border-red-500" : "border-gray-300"}`}
         />
-        {errors.email && <p className="form-error text-sm text-red-500">{errors.email}</p>}
+        {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="cpf" className="form-label">CPF *</Label>
-        <Input
+        <label htmlFor="cpf" className="block text-sm font-medium text-gray-700">CPF *</label>
+        <input
           id="cpf"
           name="cpf"
           type="text"
           placeholder="000.000.000-00"
           value={formData.cpf}
           onChange={handleInputChange}
-          className={`input-field ${errors.cpf ? "border-destructive" : ""}`}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.cpf ? "border-red-500" : "border-gray-300"}`}
         />
-        {errors.cpf && <p className="form-error text-sm text-red-500">{errors.cpf}</p>}
+        {errors.cpf && <p className="text-sm text-red-500">{errors.cpf}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone" className="form-label">Telefone *</Label>
-        <Input
+        <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Telefone *</label>
+        <input
           id="phone"
           name="phone"
           type="text"
           placeholder="(00) 00000-0000"
           value={formData.phone}
           onChange={handleInputChange}
-          className={`input-field ${errors.phone ? "border-destructive" : ""}`}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.phone ? "border-red-500" : "border-gray-300"}`}
         />
-        {errors.phone && <p className="form-error text-sm text-red-500">{errors.phone}</p>}
+        {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password" className="form-label">Senha *</Label>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Senha *</label>
         <div className="relative">
-          <Input
+          <input
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
             placeholder="Digite sua senha"
             value={formData.password}
             onChange={handleInputChange}
-            className={`input-field ${errors.password ? "border-destructive" : ""}`}
+            className={`w-full px-3 py-2 pr-10 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.password ? "border-red-500" : "border-gray-300"}`}
           />
           <button
             type="button"
@@ -340,26 +331,26 @@ const Register = () => {
             className="absolute inset-y-0 right-0 pr-3 flex items-center"
           >
             {showPassword ? (
-              <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-smooth" />
+              <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
             ) : (
-              <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-smooth" />
+              <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
             )}
           </button>
         </div>
-        {errors.password && <p className="form-error text-sm text-red-500">{errors.password}</p>}
+        {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword" className="form-label">Confirmar Senha *</Label>
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirmar Senha *</label>
         <div className="relative">
-          <Input
+          <input
             id="confirmPassword"
             name="confirmPassword"
             type={showConfirmPassword ? "text" : "password"}
             placeholder="Confirme sua senha"
             value={formData.confirmPassword}
             onChange={handleInputChange}
-            className={`input-field ${errors.confirmPassword ? "border-destructive" : ""}`}
+            className={`w-full px-3 py-2 pr-10 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.confirmPassword ? "border-red-500" : "border-gray-300"}`}
           />
           <button
             type="button"
@@ -367,30 +358,32 @@ const Register = () => {
             className="absolute inset-y-0 right-0 pr-3 flex items-center"
           >
             {showConfirmPassword ? (
-              <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-smooth" />
+              <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
             ) : (
-              <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-smooth" />
+              <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
             )}
           </button>
         </div>
-        {errors.confirmPassword && <p className="form-error text-sm text-red-500">{errors.confirmPassword}</p>}
+        {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="role" className="form-label">Tipo de Usuário *</Label>
-        <Select value={formData.role} onValueChange={(value) => handleSelectChange('role', value)}>
-          <SelectTrigger className={`input-field ${errors.role ? "border-destructive" : ""}`}>
-            <SelectValue placeholder="Selecione seu tipo de usuário" />
-          </SelectTrigger>
-          <SelectContent>
-            {roleOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.role && <p className="form-error text-sm text-red-500">{errors.role}</p>}
+        <label htmlFor="role" className="block text-sm font-medium text-gray-700">Tipo de Usuário *</label>
+        <select
+          id="role"
+          name="role"
+          value={formData.role}
+          onChange={handleInputChange}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.role ? "border-red-500" : "border-gray-300"}`}
+        >
+          <option value="">Selecione seu tipo de usuário</option>
+          {roleOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {errors.role && <p className="text-sm text-red-500">{errors.role}</p>}
       </div>
     </div>
   );
@@ -403,106 +396,108 @@ const Register = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="birthDate" className="form-label">Data de Nascimento *</Label>
-        <Input
+        <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">Data de Nascimento *</label>
+        <input
           id="birthDate"
           name="birthDate"
           type="date"
           value={formData.birthDate}
           onChange={handleInputChange}
-          className={`input-field ${errors.birthDate ? "border-destructive" : ""}`}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.birthDate ? "border-red-500" : "border-gray-300"}`}
         />
-        {errors.birthDate && <p className="form-error text-sm text-red-500">{errors.birthDate}</p>}
+        {errors.birthDate && <p className="text-sm text-red-500">{errors.birthDate}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="gender" className="form-label">Gênero *</Label>
-        <Select value={formData.gender} onValueChange={(value) => handleSelectChange('gender', value)}>
-          <SelectTrigger className={`input-field ${errors.gender ? "border-destructive" : ""}`}>
-            <SelectValue placeholder="Selecione seu gênero" />
-          </SelectTrigger>
-          <SelectContent>
-            {genderOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.gender && <p className="form-error text-sm text-red-500">{errors.gender}</p>}
+        <label htmlFor="gender" className="block text-sm font-medium text-gray-700">Gênero *</label>
+        <select
+          id="gender"
+          name="gender"
+          value={formData.gender}
+          onChange={handleInputChange}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.gender ? "border-red-500" : "border-gray-300"}`}
+        >
+          <option value="">Selecione seu gênero</option>
+          {genderOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {errors.gender && <p className="text-sm text-red-500">{errors.gender}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="address" className="form-label">Endereço (Rua, Número) *</Label>
-        <Input
+        <label htmlFor="address" className="block text-sm font-medium text-gray-700">Endereço (Rua, Número) *</label>
+        <input
           id="address"
           name="address"
           type="text"
           placeholder="Rua Exemplo, 123"
           value={formData.address}
           onChange={handleInputChange}
-          className={`input-field ${errors.address ? "border-destructive" : ""}`}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.address ? "border-red-500" : "border-gray-300"}`}
         />
-        {errors.address && <p className="form-error text-sm text-red-500">{errors.address}</p>}
+        {errors.address && <p className="text-sm text-red-500">{errors.address}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="neighborhood" className="form-label">Bairro *</Label>
-        <Input
+        <label htmlFor="neighborhood" className="block text-sm font-medium text-gray-700">Bairro *</label>
+        <input
           id="neighborhood"
           name="neighborhood"
           type="text"
           placeholder="Bairro Exemplo"
           value={formData.neighborhood}
           onChange={handleInputChange}
-          className={`input-field ${errors.neighborhood ? "border-destructive" : ""}`}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.neighborhood ? "border-red-500" : "border-gray-300"}`}
         />
-        {errors.neighborhood && <p className="form-error text-sm text-red-500">{errors.neighborhood}</p>}
+        {errors.neighborhood && <p className="text-sm text-red-500">{errors.neighborhood}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="city" className="form-label">Cidade *</Label>
-          <Input
+          <label htmlFor="city" className="block text-sm font-medium text-gray-700">Cidade *</label>
+          <input
             id="city"
             name="city"
             type="text"
             placeholder="Cidade Exemplo"
             value={formData.city}
             onChange={handleInputChange}
-            className={`input-field ${errors.city ? "border-destructive" : ""}`}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.city ? "border-red-500" : "border-gray-300"}`}
           />
-          {errors.city && <p className="form-error text-sm text-red-500">{errors.city}</p>}
+          {errors.city && <p className="text-sm text-red-500">{errors.city}</p>}
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="state" className="form-label">Estado *</Label>
-          <Input
+          <label htmlFor="state" className="block text-sm font-medium text-gray-700">Estado *</label>
+          <input
             id="state"
             name="state"
             type="text"
             placeholder="SP"
             value={formData.state}
             onChange={handleInputChange}
-            className={`input-field ${errors.state ? "border-destructive" : ""}`}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.state ? "border-red-500" : "border-gray-300"}`}
             maxLength={2}
           />
-          {errors.state && <p className="form-error text-sm text-red-500">{errors.state}</p>}
+          {errors.state && <p className="text-sm text-red-500">{errors.state}</p>}
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="zipCode" className="form-label">CEP *</Label>
-        <Input
+        <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700">CEP *</label>
+        <input
           id="zipCode"
           name="zipCode"
           type="text"
           placeholder="12345-678"
           value={formData.zipCode}
           onChange={handleInputChange}
-          className={`input-field ${errors.zipCode ? "border-destructive" : ""}`}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.zipCode ? "border-red-500" : "border-gray-300"}`}
         />
-        {errors.zipCode && <p className="form-error text-sm text-red-500">{errors.zipCode}</p>}
+        {errors.zipCode && <p className="text-sm text-red-500">{errors.zipCode}</p>}
       </div>
     </div>
   );
@@ -515,46 +510,48 @@ const Register = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="institution" className="form-label">Instituição *</Label>
-        <Input
+        <label htmlFor="institution" className="block text-sm font-medium text-gray-700">Instituição *</label>
+        <input
           id="institution"
           name="institution"
           type="text"
           placeholder="Nome da escola, universidade ou instituição"
           value={formData.institution}
           onChange={handleInputChange}
-          className={`input-field ${errors.institution ? "border-destructive" : ""}`}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.institution ? "border-red-500" : "border-gray-300"}`}
         />
-        {errors.institution && <p className="form-error text-sm text-red-500">{errors.institution}</p>}
+        {errors.institution && <p className="text-sm text-red-500">{errors.institution}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="position" className="form-label">Nível Escolar *</Label>
-        <Select value={formData.position} onValueChange={(value) => handleSelectChange('position', value)}>
-          <SelectTrigger className={`input-field ${errors.position ? "border-destructive" : ""}`}>
-            <SelectValue placeholder="Selecione seu nível" />
-          </SelectTrigger>
-          <SelectContent>
-            {nivelEscolarOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.position && <p className="form-error text-sm text-red-500">{errors.position}</p>}
+        <label htmlFor="position" className="block text-sm font-medium text-gray-700">Nível Escolar *</label>
+        <select
+          id="position"
+          name="position"
+          value={formData.position}
+          onChange={handleInputChange}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.position ? "border-red-500" : "border-gray-300"}`}
+        >
+          <option value="">Selecione seu nível</option>
+          {nivelEscolarOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {errors.position && <p className="text-sm text-red-500">{errors.position}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="formation" className="form-label">Formação Acadêmica</Label>
-        <Input
+        <label htmlFor="formation" className="block text-sm font-medium text-gray-700">Formação Acadêmica</label>
+        <input
           id="formation"
           name="formation"
           type="text"
           placeholder="Ex: Licenciatura em Biologia (opcional)"
           value={formData.formation}
           onChange={handleInputChange}
-          className="input-field"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
     </div>
@@ -563,14 +560,14 @@ const Register = () => {
   if (showSuccess) {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
-        <div className="container max-w-md bg-white rounded-xl shadow-elegant p-8 transition-all">
+        <div className="container max-w-md bg-white rounded-xl shadow-elegant p-8">
           <div className="text-center space-y-4">
             <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
             <h1 className="text-2xl font-bold text-gray-900">Cadastro Realizado!</h1>
-            <p className="text-muted-foreground">
+            <p className="text-gray-600">
               Sua conta foi criada com sucesso. Redirecionando para o login...
             </p>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-gray-500">
               Você será redirecionado em alguns segundos
             </div>
           </div>
@@ -581,21 +578,21 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
-      <div className="container max-w-md bg-white rounded-xl shadow-elegant p-8 transition-all">
+      <div className="container max-w-md bg-white rounded-xl shadow-elegant p-8">
         {/* Header do formulário */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2 bg-gradient-primary bg-clip-text text-transparent">
             Criar Conta na FEBIC
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg text-gray-600">
             Cadastre-se para participar da Feira Brasileira de Iniciação Científica (Passo {currentStep} de 3)
           </p>
         </div>
 
         {/* Barra de progresso */}
-        <div className="w-full bg-muted/50 rounded-full h-2 mb-6">
+        <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
           <div 
-            className="bg-gradient-primary h-2 rounded-full transition-all duration-300 flex items-center justify-end pr-1 hover-glow" 
+            className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300 flex items-center justify-end pr-1" 
             style={{ width: `${progressPercentage}%` }}
           >
             {progressPercentage === 100 && (
@@ -605,24 +602,36 @@ const Register = () => {
         </div>
 
         {/* Formulário */}
-        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-6">
           {currentStep === 1 && renderStep1()}
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}
 
           <div className="flex justify-between gap-4">
             {currentStep > 1 && (
-              <Button type="button" variant="outline" className="hover-lift hover-glow" onClick={prevStep}>
+              <button 
+                type="button" 
+                onClick={prevStep}
+                className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+              >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar
-              </Button>
+              </button>
             )}
             {currentStep < 3 ? (
-              <Button type="button" className="ml-auto btn-primary hover-lift hover-glow" onClick={nextStep}>
+              <button 
+                type="button" 
+                onClick={nextStep}
+                className="ml-auto px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
                 Próximo
-              </Button>
+              </button>
             ) : (
-              <Button type="submit" className="ml-auto btn-primary hover-lift hover-glow" disabled={loading}>
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="ml-auto px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
@@ -631,14 +640,14 @@ const Register = () => {
                 ) : (
                   'Criar Conta'
                 )}
-              </Button>
+              </button>
             )}
           </div>
 
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-600">
               Já tem uma conta?{' '}
-              <Link to="/auth/login" className="text-primary hover:underline transition-smooth">
+              <Link to="/auth/login" className="text-blue-600 hover:underline">
                 Faça login aqui
               </Link>
             </p>
@@ -649,7 +658,7 @@ const Register = () => {
         <div className="mt-6 text-center">
           <Link 
             to="/" 
-            className="text-primary hover:underline hover:text-primary-700 transition-smooth flex items-center justify-center gap-2 text-sm"
+            className="text-blue-600 hover:underline flex items-center justify-center gap-2 text-sm"
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar para a Home
@@ -658,7 +667,7 @@ const Register = () => {
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-gray-500">
             Sistema de Gestão de Feiras Científicas © 2025 FEBIC
           </p>
         </div>

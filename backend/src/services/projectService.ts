@@ -437,55 +437,174 @@ export class ProjectService {
     });
   }
 
-  // Estatísticas do projeto
-  static async getProjectStats(userRole: string, userId: string) {
-    const whereClause: any = {};
+  // EstatÃ­sticas do projeto
+static async getProjectStats(userRole: string, userId: string) {
+  const whereClause: any = {};
+
+  if (userRole !== 'ADMINISTRADOR') {
+    whereClause.ownerId = userId;
+  }
+
+  const [
+    total,
+    rascunho,
+    submetido,
+    emAnalise,
+    aprovado,
+    reprovado,
+    aguardandoPagamento,
+    confirmadoVirtual,
+    finalistaPresencial,
+    premiado,
+    arquivado
+  ] = await Promise.all([
+    prisma.project.count({ where: whereClause }),
+    prisma.project.count({ where: { ...whereClause, status: 'RASCUNHO' } }),
+    prisma.project.count({ where: { ...whereClause, status: 'SUBMETIDO' } }),
+    prisma.project.count({ where: { ...whereClause, status: 'EM_ANALISE_CIAS' } }),
+    prisma.project.count({ where: { ...whereClause, status: 'APROVADO_CIAS' } }),
+    prisma.project.count({ where: { ...whereClause, status: 'REPROVADO_CIAS' } }),
+    prisma.project.count({ where: { ...whereClause, status: 'AGUARDANDO_PAGAMENTO' } }),
+    prisma.project.count({ where: { ...whereClause, status: 'CONFIRMADO_VIRTUAL' } }),
+    prisma.project.count({ where: { ...whereClause, status: 'FINALISTA_PRESENCIAL' } }),
+    prisma.project.count({ where: { ...whereClause, status: 'PREMIADO' } }),
+    prisma.project.count({ where: { ...whereClause, status: 'ARQUIVADO' } })
+  ]);
+
+  return {
+    total,
+    byStatus: {
+      RASCUNHO: rascunho,
+      SUBMETIDO: submetido,
+      EM_ANALISE_CIAS: emAnalise,
+      APROVADO_CIAS: aprovado,
+      REPROVADO_CIAS: reprovado,
+      AGUARDANDO_PAGAMENTO: aguardandoPagamento,
+      CONFIRMADO_VIRTUAL: confirmadoVirtual,
+      FINALISTA_PRESENCIAL: finalistaPresencial,
+      PREMIADO: premiado,
+      ARQUIVADO: arquivado
+    },
+    byCategory: {
+      I: 0, II: 0, III: 0, IV: 0, V: 0, VI: 0, VII: 0, VIII: 0, IX: 0, RELATO: 0
+    }
+  };
+}
+// Atualizar projeto
+  static async updateProject(projectId: string, data: any, userRole: string, userId: string) {
+    const whereClause: any = { id: projectId };
 
     if (userRole !== 'ADMINISTRADOR') {
       whereClause.ownerId = userId;
     }
 
-    const [
-      total,
-      rascunho,
-      submetido,
-      aprovado,
-      finalista,
-      premiado
-    ] = await Promise.all([
-      prisma.project.count({ where: whereClause }),
-      prisma.project.count({ where: { ...whereClause, status: 'RASCUNHO' } }),
-      prisma.project.count({ where: { ...whereClause, status: 'SUBMETIDO' } }),
-      prisma.project.count({ where: { ...whereClause, status: 'APROVADO_CIAS' } }),
-      prisma.project.count({ where: { ...whereClause, status: 'FINALISTA_PRESENCIAL' } }),
-      prisma.project.count({ where: { ...whereClause, status: 'PREMIADO' } })
-    ]);
+    const project = await prisma.project.findFirst({ where: whereClause });
+    if (!project) {
+      throw new Error('Projeto não encontrado');
+    }
 
-    return {
-      total,
-      rascunho,
-      submetido,
-      aprovado,
-      finalista,
-      premiado
-    };
+    return await prisma.project.update({
+      where: { id: projectId },
+      data: {
+        title: data.title?.trim(),
+        summary: data.summary?.trim(),
+        objective: data.objective?.trim(),
+        methodology: data.methodology?.trim(),
+        results: data.results?.trim() || null,
+        conclusion: data.conclusion?.trim() || null,
+        bibliography: data.bibliography?.trim() || null,
+        category: data.category,
+        areaConhecimentoId: data.areaConhecimentoId,
+        keywords: data.keywords || [],
+        institution: data.institution?.trim(),
+        institutionCity: data.institutionCity?.trim(),
+        institutionState: data.institutionState?.trim(),
+        updatedAt: new Date()
+      },
+      include: {
+        members: true,
+        orientadores: true,
+        areaConhecimento: true,
+        owner: {
+          select: { id: true, name: true, email: true, role: true }
+        }
+      }
+    });
   }
 
-  // Outras funções existentes (manter como estavam)
-  static async updateProject(projectId: string, data: any, userRole: string, userId: string) {
-    // Implementar validações similares ao create
-    // Manter lógica existente mas com novas validações
-  }
-
+  // Deletar projeto
   static async deleteProject(projectId: string, userRole: string, userId: string) {
-    // Manter lógica existente
+    const whereClause: any = { id: projectId };
+
+    if (userRole !== 'ADMINISTRADOR') {
+      whereClause.ownerId = userId;
+    }
+
+    const project = await prisma.project.findFirst({ where: whereClause });
+    if (!project) {
+      throw new Error('Projeto não encontrado');
+    }
+
+    if (project.status !== 'RASCUNHO') {
+      throw new Error('Apenas projetos em rascunho podem ser excluídos');
+    }
+
+    await prisma.project.delete({ where: { id: projectId } });
   }
 
+  // Submeter projeto
   static async submitProject(projectId: string, userId: string) {
-    // Manter lógica existente
+    const project = await prisma.project.findFirst({
+      where: { id: projectId, ownerId: userId }
+    });
+
+    if (!project) {
+      throw new Error('Projeto não encontrado');
+    }
+
+    if (project.status !== 'RASCUNHO') {
+      throw new Error('Apenas projetos em rascunho podem ser submetidos');
+    }
+
+    return await prisma.project.update({
+      where: { id: projectId },
+      data: {
+        status: ProjectStatus.SUBMETIDO,
+        submissionDate: new Date()
+      },
+      include: {
+        members: true,
+        orientadores: true,
+        areaConhecimento: true,
+        owner: {
+          select: { id: true, name: true, email: true, role: true }
+        }
+      }
+    });
   }
 
+  // Atualizar status (admin apenas)
   static async updateStatus(projectId: string, status: string, userRole: string) {
-    // Manter lógica existente
+    if (userRole !== 'ADMINISTRADOR') {
+      throw new Error('Apenas administradores podem alterar status');
+    }
+
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) {
+      throw new Error('Projeto não encontrado');
+    }
+
+    return await prisma.project.update({
+      where: { id: projectId },
+      data: { status: status as ProjectStatus },
+      include: {
+        members: true,
+        orientadores: true,
+        areaConhecimento: true,
+        owner: {
+          select: { id: true, name: true, email: true, role: true }
+        }
+      }
+    });
   }
-}
+} // <- Esta é a chave de fechamento da classe

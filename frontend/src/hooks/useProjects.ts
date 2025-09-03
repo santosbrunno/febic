@@ -12,7 +12,7 @@ import api from '../services/api';
 import toast from 'react-hot-toast';
 
 export const useProjects = (initialFilters?: ProjectFilters) => {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]); // ✅ Array vazio, não undefined
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -24,36 +24,32 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
 
   // ===== BUSCAR PROJETOS =====
   const fetchProjects = useCallback(async (newFilters?: ProjectFilters) => {
-    try {
-      setLoading(true);
-      
-      const queryParams = { ...filters, ...newFilters };
-      
-      // Remover parâmetros vazios
-      const cleanParams = Object.entries(queryParams).reduce((acc, [key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as Record<string, any>);
-
-      const response = await api.get('/projects', { params: cleanParams });  // ✅ Removido /api/
-      
-      if (response.data.success) {
-        const data: ProjectsListResponse = response.data.data;
-        setProjects(data.projects);
-        setPagination(data.pagination);
+  try {
+    setLoading(true);
+    
+    const queryParams = { ...filters, ...newFilters };
+    const cleanParams = Object.entries(queryParams).reduce((acc, [key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        acc[key] = value;
       }
-    } catch (error: any) {
-      console.error('Erro ao buscar projetos:', error);
-      toast.error(
-        error.response?.data?.message || 'Erro ao carregar projetos'
-      );
-      setProjects([]);
-    } finally {
-      setLoading(false);
+      return acc;
+    }, {} as Record<string, any>);
+
+    const response = await api.get('/projects', { params: cleanParams });
+    
+    if (response.data.success) {
+      // ✅ Garantir que sempre seja um array
+      const projectsData = response.data.data?.projects || response.data.data || [];
+      setProjects(Array.isArray(projectsData) ? projectsData : []);
     }
-  }, [filters]);
+  } catch (error: any) {
+    console.error('Erro ao buscar projetos:', error);
+    toast.error(error.response?.data?.message || 'Erro ao carregar projetos');
+    setProjects([]); // ✅ Sempre array vazio em caso de erro
+  } finally {
+    setLoading(false);
+  }
+}, [filters]);
 
   // ===== BUSCAR PROJETO POR ID =====
   const getProject = async (id: string): Promise<Project | null> => {  // ✅ Corrigido para string (CUID)
@@ -61,7 +57,7 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
       const response = await api.get(`/projects/${id}`);  // ✅ Removido /api/
       
       if (response.data.success) {
-        return response.data.data.project;
+        return response.data.data;;
       }
       return null;
     } catch (error: any) {
@@ -74,57 +70,56 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
   };
 
   // ===== CRIAR PROJETO =====
-  const createProject = async (data: CreateProjectData): Promise<Project | null> => {
-    try {
-      const response = await api.post('/projects', data);  // ✅ Removido /api/
+const createProject = async (data: CreateProjectData): Promise<Project | null> => {
+  try {
+    const response = await api.post('/projects', data);
+    
+    if (response.data.success) {
+      const newProject: Project = response.data.data; // ✅ Corrigido
       
-      if (response.data.success) {
-        const newProject: Project = response.data.data.project;
-        
-        // Adicionar à lista se estiver na primeira página
-        if (pagination.page === 1) {
-          setProjects(prev => [newProject, ...prev.slice(0, pagination.limit - 1)]);
-        }
-        
-        toast.success('Projeto criado com sucesso!');
-        return newProject;
+      // ✅ Versão mais segura: só atualizar a lista se estivermos na primeira página
+      if (pagination?.page === 1) {
+        setProjects(prev => {
+          const limit = pagination?.limit || 10;
+          return [newProject, ...prev.slice(0, Math.max(0, limit - 1))];
+        });
+      } else {
+        // Se não estiver na primeira página, apenas refetch para garantir consistência
+        fetchProjects();
       }
-      return null;
-    } catch (error: any) {
-      console.error('Erro ao criar projeto:', error);
-      toast.error(
-        error.response?.data?.message || 'Erro ao criar projeto'
-      );
-      return null;
+      
+      toast.success('Projeto criado com sucesso!');
+      return newProject;
     }
-  };
+    return null;
+  } catch (error: any) {
+    console.error('Erro ao criar projeto:', error);
+    toast.error(
+      error.response?.data?.message || 'Erro ao criar projeto'
+    );
+    return null;
+  }
+};
 
   // ===== ATUALIZAR PROJETO =====
-  const updateProject = async (id: string, data: UpdateProjectData): Promise<boolean> => {  // ✅ Corrigido para string
-    try {
-      const response = await api.put(`/projects/${id}`, data);  // ✅ Removido /api/
+const updateProject = async (id: string, data: UpdateProjectData): Promise<boolean> => {
+  try {
+    const response = await api.put(`/projects/${id}`, data);
+    
+    if (response.data.success) {
+      // Em vez de atualizar localmente, refaça a busca
+      await fetchProjects();
       
-      if (response.data.success) {
-        const updatedProject: Project = response.data.data.project;
-        
-        // Atualizar na lista
-        setProjects(prev => 
-          prev.map(p => p.id === id ? updatedProject : p)
-        );
-        
-        toast.success('Projeto atualizado com sucesso!');
-        return true;
-      }
-      return false;
-    } catch (error: any) {
-      console.error('Erro ao atualizar projeto:', error);
-      toast.error(
-        error.response?.data?.message || 'Erro ao atualizar projeto'
-      );
-      return false;
+      toast.success('Projeto atualizado com sucesso!');
+      return true;
     }
-  };
-
+    return false;
+  } catch (error: any) {
+    console.error('Erro ao atualizar projeto:', error);
+    toast.error(error.response?.data?.message || 'Erro ao atualizar projeto');
+    return false;
+  }
+};
   // ===== EXCLUIR PROJETO =====
   const deleteProject = async (id: string): Promise<boolean> => {  // ✅ Corrigido para string
     try {
@@ -153,7 +148,7 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
       const response = await api.post(`/projects/${id}/submit`);  // ✅ Removido /api/
       
       if (response.data.success) {
-        const updatedProject: Project = response.data.data.project;
+        const updatedProject: Project = response.data.data;
         
         // Atualizar na lista
         setProjects(prev => 
@@ -179,7 +174,7 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
       const response = await api.put(`/projects/${id}/status`, { status });  // ✅ Removido /api/
       
       if (response.data.success) {
-        const updatedProject: Project = response.data.data.project;
+        const updatedProject: Project = response.data.data;
         
         // Atualizar na lista
         setProjects(prev => 
@@ -251,20 +246,20 @@ export const useProjectStats = () => {
   const [loading, setLoading] = useState(false);
 
   const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get('/projects/stats');  // ✅ Removido /api/
-      
-      if (response.data.success) {
-        setStats(response.data.data.stats);
-      }
-    } catch (error: any) {
-      console.error('Erro ao buscar estatísticas:', error);
-      toast.error('Erro ao carregar estatísticas');
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    const response = await api.get('/projects/stats');
+    
+    if (response.data.success) {
+      setStats(response.data.data); // ✅ Corrigido: remover .stats
     }
-  };
+  } catch (error: any) {
+    console.error('Erro ao buscar estatísticas:', error);
+    toast.error('Erro ao carregar estatísticas');
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchStats();
@@ -288,7 +283,7 @@ export const useAreasConhecimento = (nivel?: number, parent?: string) => {
       const response = await api.get('/projects/areas', { params });  // ✅ Corrigido para /projects/areas
       
       if (response.data.success) {
-        setAreas(response.data.data.areas);
+        setAreas(response.data.data);
       }
     } catch (error: any) {
       console.error('Erro ao buscar áreas do conhecimento:', error);

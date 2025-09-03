@@ -5,13 +5,14 @@ export type ProjectCategory = 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI' | 'VII' | '
 export type ProjectStatus = 
   | 'RASCUNHO' 
   | 'SUBMETIDO' 
-  | 'SELECIONADO' 
+  | 'EM_ANALISE_CIAS'
+  | 'APROVADO_CIAS'      
+  | 'REPROVADO_CIAS'     
+  | 'AGUARDANDO_PAGAMENTO' 
   | 'CONFIRMADO_VIRTUAL' 
-  | 'FINALISTA' 
-  | 'CONFIRMADO_PRESENCIAL' 
-  | 'AVALIADO' 
+  | 'FINALISTA_PRESENCIAL' 
   | 'PREMIADO' 
-  | 'DESCLASSIFICADO';
+  | 'ARQUIVADO';         
 
 export type MemberRole = 'AUTOR_PRINCIPAL' | 'AUTOR';
 export type OrientadorTipo = 'ORIENTADOR' | 'COORIENTADOR';
@@ -19,43 +20,52 @@ export type OrientadorTipo = 'ORIENTADOR' | 'COORIENTADOR';
 // ===== INTERFACES PRINCIPAIS =====
 
 export interface Project {
-  id: number;
-  titulo: string;
-  categoria: ProjectCategory;
+  id: string; // ✅ string (CUID)
+  title: string; // ✅ title (não titulo)
+  summary: string; // ✅ summary (não resumo)
+  objective: string;
+  methodology: string;
+  results?: string;
+  conclusion?: string;
+  bibliography?: string;
+  category: ProjectCategory;
   areaConhecimentoId: string;
-  resumo?: string;
-  palavrasChave?: string;
+  keywords: string[];
+  researchLine?: string;
+  institution: string;
+  institutionCity: string;
+  institutionState: string;
+  institutionCountry: string;
+  isPublicSchool: boolean;
+  isRuralSchool: boolean;
+  isIndigenous: boolean;
+  hasDisability: boolean;
+  socialVulnerability: boolean;
   status: ProjectStatus;
-  isCredenciado: boolean;
-  tokenFeira?: string;
-  institutionName?: string;
-  institutionState?: string;
-  institutionCity?: string;
-  isPublicInstitution: boolean;
-  isFullTimeInstitution: boolean;
-  createdBy: number;
+  ownerId: string; // ✅ ownerId (não createdBy)
+  isPaid: boolean;
+  paymentRequired: boolean;
+  isPaymentExempt: boolean;
+  exemptionReason?: string;
+  submissionDate?: string;
   createdAt: string;
   updatedAt: string;
   
   // Relacionamentos
-  creator?: {
-    id: number;
+  owner?: {
+    id: string;
     name: string;
     email: string;
+    role: string;
   };
   areaConhecimento?: {
-    codigo: string;
+    id: string;
+    sigla: string;
     nome: string;
     nivel: number;
   };
-  members?: ProjectMemberWithUser[];
-  orientadores?: ProjectOrientadorWithUser[];
-  documents?: ProjectDocumentInfo[];
-  _count?: {
-    members: number;
-    orientadores: number;
-    documents: number;
-  };
+  members?: ProjectMember[];
+  orientadores?: ProjectOrientador[];
 }
 
 export interface ProjectMemberWithUser {
@@ -97,26 +107,89 @@ export interface ProjectDocumentInfo {
 }
 
 export interface AreaConhecimento {
-  codigo: string;
+  id: string;
+  sigla: string; // ✅ Corrigido
   nome: string;
   nivel: number;
-  codigoPai?: string;
+  paiId?: string; // ✅ Corrigido
 }
 
 // ===== FORMULÁRIOS =====
 
+// No types/Project.ts, substitua o CreateProjectData existente por:
+
+export interface ProjectMember {
+  userId?: string;
+  name: string;
+  email?: string;
+  cpf?: string;
+  rg?: string;
+  birthDate: string;
+  gender: string;
+  phone?: string;
+  address?: string;
+  city: string;
+  state: string;
+  zipCode?: string;
+  schoolLevel: string;
+  schoolYear?: string;
+  institution: string;
+  isIndigenous: boolean;
+  hasDisability: boolean;
+  isRural: boolean;
+}
+
+export interface ProjectOrientador {
+  userId?: string;
+  name: string;
+  email: string;
+  cpf?: string;
+  phone?: string;
+  formation: string;
+  area: string;
+  institution: string;
+  position?: string;
+  city: string;
+  state: string;
+  yearsExperience?: number;
+  lattesUrl?: string;
+}
+
 export interface CreateProjectData {
-  titulo: string;
-  categoria: ProjectCategory;
+  // Dados básicos
+  title: string;
+  summary: string;
+  objective: string;
+  methodology: string;
+  results?: string;
+  conclusion?: string;
+  bibliography?: string;
+  
+  // Categoria e área
+  category: ProjectCategory | '';
   areaConhecimentoId: string;
-  resumo?: string;
-  palavrasChave?: string;
-  institutionName?: string;
-  institutionState?: string;
-  institutionCity?: string;
-  isPublicInstitution?: boolean;
-  isFullTimeInstitution?: boolean;
-  tokenFeira?: string;
+  keywords: string[];
+  researchLine?: string;
+  
+  // Dados institucionais
+  institution: string;
+  institutionCity: string;
+  institutionState: string;
+  institutionCountry: string;
+  isPublicSchool: boolean;
+  isRuralSchool: boolean;
+  isIndigenous: boolean;
+  hasDisability: boolean;
+  socialVulnerability: boolean;
+  
+  // Integrantes e orientadores
+  members: ProjectMember[];
+  orientadores: ProjectOrientador[];
+  
+  // Dados financeiros
+  paymentRequired: boolean;
+  isPaymentExempt: boolean;
+  exemptionReason?: string;
 }
 
 export interface UpdateProjectData {
@@ -257,43 +330,48 @@ export const PROJECT_STATUS_INFO: Record<ProjectStatus, {
   },
   'SUBMETIDO': {
     label: 'Submetido',
-    description: 'Enviado para avaliação do CIAS',
+    description: 'Enviado para avaliação',
     color: 'blue'
   },
-  'SELECIONADO': {
-    label: 'Selecionado',
-    description: 'Aprovado pelo CIAS para fase virtual',
+  'EM_ANALISE_CIAS': {
+    label: 'Em Análise CIAS',
+    description: 'Sendo avaliado pelo CIAS',
+    color: 'blue'
+  },
+  'APROVADO_CIAS': {
+    label: 'Aprovado CIAS',
+    description: 'Aprovado pelo CIAS',
     color: 'green'
+  },
+  'REPROVADO_CIAS': {
+    label: 'Reprovado CIAS',
+    description: 'Reprovado pelo CIAS',
+    color: 'red'
+  },
+  'AGUARDANDO_PAGAMENTO': {
+    label: 'Aguardando Pagamento',
+    description: 'Aguardando confirmação de pagamento',
+    color: 'yellow'
   },
   'CONFIRMADO_VIRTUAL': {
     label: 'Confirmado Virtual',
-    description: 'Participação virtual confirmada e paga',
+    description: 'Participação virtual confirmada',
     color: 'blue'
   },
-  'FINALISTA': {
-    label: 'Finalista',
+  'FINALISTA_PRESENCIAL': {
+    label: 'Finalista Presencial',
     description: 'Classificado para fase presencial',
     color: 'green'
-  },
-  'CONFIRMADO_PRESENCIAL': {
-    label: 'Confirmado Presencial',
-    description: 'Participação presencial confirmada e paga',
-    color: 'purple'
-  },
-  'AVALIADO': {
-    label: 'Avaliado',
-    description: 'Avaliação concluída',
-    color: 'blue'
   },
   'PREMIADO': {
     label: 'Premiado',
     description: 'Projeto premiado',
     color: 'yellow'
   },
-  'DESCLASSIFICADO': {
-    label: 'Desclassificado',
-    description: 'Não atendeu aos critérios',
-    color: 'red'
+  'ARQUIVADO': {
+    label: 'Arquivado',
+    description: 'Projeto arquivado',
+    color: 'gray'
   }
 };
 
@@ -307,25 +385,20 @@ export const getProjectStatusInfo = (status: ProjectStatus) => {
   return PROJECT_STATUS_INFO[status];
 };
 
-export const canEditProject = (project: Project, userId?: number) => {
-  const isOwner = project.createdBy === userId;
-  const isAuthorPrincipal = project.members?.some(
-    m => m.userId === userId && m.role === 'AUTOR_PRINCIPAL'
-  );
+export const canEditProject = (project: Project, userId?: string) => {
+  const isOwner = project.ownerId === userId;
+  // ✅ Removido: verificação de role que não existe
   
-  return (isOwner || isAuthorPrincipal) && 
-         ['RASCUNHO', 'SUBMETIDO'].includes(project.status);
+  return isOwner && ['RASCUNHO', 'SUBMETIDO'].includes(project.status);
 };
 
-export const canDeleteProject = (project: Project, userId?: number) => {
-  return project.createdBy === userId && project.status === 'RASCUNHO';
+export const canDeleteProject = (project: Project, userId?: string) => {
+  return project.ownerId === userId && project.status === 'RASCUNHO';
 };
 
-export const canSubmitProject = (project: Project, userId?: number) => {
-  const isOwner = project.createdBy === userId;
-  const isAuthorPrincipal = project.members?.some(
-    m => m.userId === userId && m.role === 'AUTOR_PRINCIPAL'
-  );
+export const canSubmitProject = (project: Project, userId?: string) => {
+  const isOwner = project.ownerId === userId;
+  // ✅ Removido: verificação de role que não existe
   
-  return (isOwner || isAuthorPrincipal) && project.status === 'RASCUNHO';
+  return isOwner && project.status === 'RASCUNHO';
 };

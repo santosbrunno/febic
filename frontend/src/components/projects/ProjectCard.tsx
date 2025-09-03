@@ -36,7 +36,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   const isAdmin = user?.role === 'ADMIN';
   
   // Informações da categoria
-  const categoryInfo = PROJECT_CATEGORIES.find(cat => cat.value === project.categoria);
+  const categoryInfo = PROJECT_CATEGORIES.find(cat => cat.value === project.category);
   const statusInfo = getProjectStatusInfo(project.status);
   
   // Permissões
@@ -59,7 +59,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   };
 
   // Gerar código do projeto (similar ao sistema real)
-  const projectCode = `${project.categoria}${project.id.toString().padStart(4, '0')}${project.areaConhecimento?.codigo?.slice(-2) || 'XX'}`;
+  const projectCode = `${project.category}${project.id.toString().padStart(4, '0')}${project.areaConhecimento?.sigla?.slice(-2) || 'XX'}`;
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
@@ -78,13 +78,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </div>
           
           <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-            {project.titulo}
+            {project.title}
           </h3>
           
           <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
             <div className="flex items-center gap-1">
               <User className="w-4 h-4" />
-              {project.creator?.name || 'Não informado'}
+              {project.owner?.name || 'Não informado'}
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
@@ -106,7 +106,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             {statusInfo.label}
           </span>
           <span className="text-xs text-gray-500">
-            {categoryInfo?.label || `Categoria ${project.categoria}`}
+            {categoryInfo?.label || `Categoria ${project.category}`}
           </span>
         </div>
       </div>
@@ -122,15 +122,15 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       )}
 
       {/* Instituição */}
-      {project.institutionName && (
+      {project.institution && (
         <div className="mb-4">
           <p className="text-sm text-gray-500">Instituição</p>
           <p className="text-sm font-medium text-gray-900">
-            {project.institutionName}
+            {project.institution}
             {project.institutionState && ` - ${project.institutionState}`}
           </p>
           <div className="flex gap-2 mt-1">
-            {project.isPublicInstitution && (
+            {project.isPublicSchool && (
               <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                 Pública
               </span>
@@ -145,9 +145,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       )}
 
       {/* Resumo */}
-      {project.resumo && (
+      {project.summary && (
         <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-          {project.resumo}
+          {project.summary}
         </p>
       )}
 

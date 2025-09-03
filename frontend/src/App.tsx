@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Home from './pages/Home';
 import Login from './pages/auth/Login';
+import Register from './pages/auth/Register'; // ← IMPORT ADICIONADO
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import AuthorDashboard from './pages/dashboard/AuthorDashboard';
 import ProjectsList from './pages/projects/ProjectsList';
@@ -26,7 +27,7 @@ const AppRoutes: React.FC = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/auth/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
-      <Route path="/auth/register" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/auth/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} /> {/* ← CORREÇÃO AQUI */}
       <Route
         path="/dashboard"
         element={

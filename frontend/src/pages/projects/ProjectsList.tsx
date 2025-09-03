@@ -26,7 +26,7 @@ const ProjectsList: React.FC = () => {
     updateProject,
     deleteProject,
     submitProject,
-    updateStatus,
+    updateProjectStatus,
     refetch
   } = useProjects(filters.search || filters.status || filters.category ? filters : undefined);
 
@@ -58,10 +58,10 @@ const ProjectsList: React.FC = () => {
     }
   };
 
-  const handleUpdateStatus = async (id: number, status: string) => {
+  const handleupdateProjectStatus = async (id: number, status: string) => {
     const action = status === 'APPROVED' ? 'aprovar' : 'rejeitar';
     if (window.confirm(`Tem certeza que deseja ${action} este projeto?`)) {
-      await updateStatus(id, status);
+      await updateProjectStatus(id, status);
       setSelectedProject(null); // Fechar modal após ação
     }
   };
@@ -186,7 +186,7 @@ const ProjectsList: React.FC = () => {
                 onEdit={handleEditProject}
                 onDelete={handleDeleteProject}
                 onSubmit={handleSubmitProject}
-                onUpdateStatus={handleUpdateStatus}
+                onUpdateStatus={handleupdateProjectStatus}
               />
             ))}
           </div>
@@ -208,7 +208,7 @@ const ProjectsList: React.FC = () => {
           onClose={() => setSelectedProject(null)}
           onEdit={handleEditProject}
           onSubmit={handleSubmitProject}
-          onUpdateStatus={handleUpdateStatus}
+          onUpdateStatus={handleupdateProjectStatus}
         />
       )}
     </div>

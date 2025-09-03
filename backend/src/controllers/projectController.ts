@@ -9,9 +9,23 @@ export const createProject = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ success: false, message: 'Não autenticado' });
     }
 
+    // 🔍 DEBUG - Vamos ver o que está chegando
+    console.log('=== DEBUG CREATE PROJECT ===');
+    console.log('User ID:', userId);
+    console.log('Request Body Keys:', Object.keys(req.body));
+    console.log('Request Body:', JSON.stringify(req.body, null, 2));
+    console.log('================================');
+
     const project = await ProjectService.createProject(req.body, userId);
     res.status(201).json({ success: true, data: project });
   } catch (error) {
+    // 🔍 DEBUG - Vamos ver o erro completo
+    console.error('=== ERRO CREATE PROJECT ===');
+    console.error('Error objeto:', error);
+    console.error('Error message:', error instanceof Error ? error.message : 'Erro interno');
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
+    console.error('===============================');
+    
     const message = error instanceof Error ? error.message : 'Erro interno';
     res.status(400).json({ success: false, message });
   }

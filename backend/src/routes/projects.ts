@@ -20,6 +20,10 @@ import {
 } from '../utils/validators';
 
 const router = Router();
+router.use((req, res, next) => {
+  console.log(`🔍 ROTA PROJECTS: ${req.method} ${req.path}`);
+  next();
+});
 
 // Todas as rotas requerem autenticação
 router.use(authenticateToken);
