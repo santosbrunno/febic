@@ -4,10 +4,11 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Home from './pages/Home';
 import Login from './pages/auth/Login';
-import Register from './pages/auth/Register'; // ← IMPORT ADICIONADO
+import Register from './pages/auth/Register';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import AuthorDashboard from './pages/dashboard/AuthorDashboard';
 import ProjectsList from './pages/projects/ProjectsList';
+import EditProject from './pages/projects/EditProject';
 import Loading from './components/ui/Loading';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -27,12 +28,12 @@ const AppRoutes: React.FC = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/auth/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
-      <Route path="/auth/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} /> {/* ← CORREÇÃO AQUI */}
+      <Route path="/auth/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} />
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
-            {user?.role === 'ADMIN' ? <AdminDashboard /> : <AuthorDashboard />}
+            {user?.role === 'ADMINISTRADOR' ? <AdminDashboard /> : <AuthorDashboard />}
           </ProtectedRoute>
         }
       />
@@ -41,6 +42,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <ProjectsList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects/edit/:id"
+        element={
+          <ProtectedRoute>
+            <EditProject />
           </ProtectedRoute>
         }
       />

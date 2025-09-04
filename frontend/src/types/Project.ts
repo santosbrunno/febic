@@ -309,13 +309,14 @@ export const PROJECT_CATEGORIES = [
 export const PROJECT_STATUS = [
   { value: 'RASCUNHO', label: 'Rascunho', color: 'gray' },
   { value: 'SUBMETIDO', label: 'Submetido', color: 'blue' },
-  { value: 'SELECIONADO', label: 'Selecionado', color: 'green' },
+  { value: 'EM_ANALISE_CIAS', label: 'Em Análise CIAS', color: 'yellow' },
+  { value: 'APROVADO_CIAS', label: 'Aprovado CIAS', color: 'green' },
+  { value: 'REPROVADO_CIAS', label: 'Reprovado CIAS', color: 'red' },
+  { value: 'AGUARDANDO_PAGAMENTO', label: 'Aguardando Pagamento', color: 'yellow' },
   { value: 'CONFIRMADO_VIRTUAL', label: 'Confirmado Virtual', color: 'blue' },
-  { value: 'FINALISTA', label: 'Finalista', color: 'green' },
-  { value: 'CONFIRMADO_PRESENCIAL', label: 'Confirmado Presencial', color: 'purple' },
-  { value: 'AVALIADO', label: 'Avaliado', color: 'blue' },
-  { value: 'PREMIADO', label: 'Premiado', color: 'yellow' },
-  { value: 'DESCLASSIFICADO', label: 'Desclassificado', color: 'red' }
+  { value: 'FINALISTA_PRESENCIAL', label: 'Finalista Presencial', color: 'purple' },
+  { value: 'PREMIADO', label: 'Premiado', color: 'green' },
+  { value: 'ARQUIVADO', label: 'Arquivado', color: 'gray' }
 ] as const;
 
 export const PROJECT_STATUS_INFO: Record<ProjectStatus, {

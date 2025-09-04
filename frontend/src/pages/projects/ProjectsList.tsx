@@ -1,16 +1,17 @@
-
 import React, { useState } from 'react';
-import { Plus, Search, Filter } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Search, Filter, ArrowLeft, Home } from 'lucide-react';
 import { useProjects } from '../../hooks/useProjects';
 import { useAuth } from '../../contexts/AuthContext';
 import ProjectCard from '../../components/projects/ProjectCard';
-import ProjectForm from '../../components/projects/ProjectForm';
+import CreateProject from './CreateProject';
 import ProjectDetailModal from '../../components/projects/ProjectModal';
 import Loading from '../../components/ui/Loading';
 import { Project, CreateProjectData, PROJECT_CATEGORIES, PROJECT_STATUS } from '../../types/Project';
 
 const ProjectsList: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [filters, setFilters] = useState({
@@ -40,29 +41,28 @@ const ProjectsList: React.FC = () => {
   };
 
   const handleEditProject = (project: Project) => {
-    // TODO: Implementar edição
-    console.log('Editar projeto:', project);
-    setSelectedProject(null); // Fechar modal de detalhes primeiro
+    // Navegar para página de edição
+    navigate(`/projects/edit/${project.id}`);
   };
 
-  const handleDeleteProject = async (id: number) => {
+  const handleDeleteProject = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este projeto?')) {
       await deleteProject(id);
     }
   };
 
-  const handleSubmitProject = async (id: number) => {
+  const handleSubmitProject = async (id: string) => {
     if (window.confirm('Tem certeza que deseja enviar este projeto para avaliação?')) {
       await submitProject(id);
-      setSelectedProject(null); // Fechar modal após ação
+      setSelectedProject(null);
     }
   };
 
-  const handleupdateProjectStatus = async (id: number, status: string) => {
-    const action = status === 'APPROVED' ? 'aprovar' : 'rejeitar';
+  const handleUpdateProjectStatus = async (id: string, status: string) => {
+    const action = status === 'SELECIONADO' ? 'aprovar' : 'desclassificar';
     if (window.confirm(`Tem certeza que deseja ${action} este projeto?`)) {
       await updateProjectStatus(id, status);
-      setSelectedProject(null); // Fechar modal após ação
+      setSelectedProject(null);
     }
   };
 
@@ -74,24 +74,44 @@ const ProjectsList: React.FC = () => {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {user?.role === 'ADMIN' ? 'Todos os Projetos' : 'Meus Projetos'}
-              </h1>
-              <p className="text-gray-600 mt-1">
-                {projects.length} projeto{projects.length !== 1 ? 's' : ''} encontrado{projects.length !== 1 ? 's' : ''}
-              </p>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                Voltar ao Dashboard
+              </button>
+              <div className="h-6 w-px bg-gray-300" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {user?.role === 'ADMINISTRADOR' ? 'Todos os Projetos' : 'Meus Projetos'}
+                </h1>
+                <p className="text-gray-600 mt-1">
+                  {projects.length} projeto{projects.length !== 1 ? 's' : ''} encontrado{projects.length !== 1 ? 's' : ''}
+                </p>
+              </div>
             </div>
             
-            {user?.role === 'AUTHOR' && (
+            <div className="flex gap-2">
               <button
-                onClick={() => setShowCreateForm(true)}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors px-3 py-2"
               >
-                <Plus className="w-4 h-4" />
-                Novo Projeto
+                <Home className="h-4 w-4" />
+                Home
               </button>
-            )}
+              
+              {user?.role === 'AUTOR' && (
+                <button
+                  onClick={() => setShowCreateForm(true)}
+                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Novo Projeto
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -162,12 +182,12 @@ const ProjectsList: React.FC = () => {
               Nenhum projeto encontrado
             </h3>
             <p className="text-gray-600 mb-6">
-              {user?.role === 'AUTHOR' 
+              {user?.role === 'AUTOR' 
                 ? 'Comece criando seu primeiro projeto!'
                 : 'Nenhum projeto corresponde aos filtros selecionados.'
               }
             </p>
-            {user?.role === 'AUTHOR' && (
+            {user?.role === 'AUTOR' && (
               <button
                 onClick={() => setShowCreateForm(true)}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -186,7 +206,7 @@ const ProjectsList: React.FC = () => {
                 onEdit={handleEditProject}
                 onDelete={handleDeleteProject}
                 onSubmit={handleSubmitProject}
-                onUpdateStatus={handleupdateProjectStatus}
+                onUpdateStatus={handleUpdateProjectStatus}
               />
             ))}
           </div>
@@ -195,7 +215,7 @@ const ProjectsList: React.FC = () => {
 
       {/* Create Form Modal */}
       {showCreateForm && (
-        <ProjectForm
+        <CreateProject
           onSubmit={handleCreateProject}
           onCancel={() => setShowCreateForm(false)}
         />
@@ -208,7 +228,7 @@ const ProjectsList: React.FC = () => {
           onClose={() => setSelectedProject(null)}
           onEdit={handleEditProject}
           onSubmit={handleSubmitProject}
-          onUpdateStatus={handleupdateProjectStatus}
+          onUpdateStatus={handleUpdateProjectStatus}
         />
       )}
     </div>

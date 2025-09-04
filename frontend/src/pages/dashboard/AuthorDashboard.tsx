@@ -7,9 +7,10 @@ import CreateProject from '../projects/CreateProject';
 import { CreateProjectData } from '../../types/Project';
 
 const AuthorDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
-  const { stats, loading: statsLoading } = useProjectStats();
-  const { createProject } = useProjects();
+const { user, logout } = useAuth();
+const { stats, loading: statsLoading } = useProjectStats();
+const { createProject } = useProjects();
+
   const [showCreateForm, setShowCreateForm] = useState(false);
   const navigate = useNavigate();
 
@@ -36,7 +37,7 @@ const AuthorDashboard: React.FC = () => {
               </div>
               <button
                 onClick={logout}
-                className="flex items-center text-gray-600 hover:text-red-600 transition-colors"
+                className="flex items-center text-gray-600 hover:text-red-600 transition-colors p-2 border border-gray-300 rounded"
               >
                 <LogOut className="h-5 w-5" />
               </button>

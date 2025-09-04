@@ -1,8 +1,22 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, AuthContextType } from '../types/Auth';
 import { authService } from '../services/authService';
 import toast from 'react-hot-toast';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  [key: string]: any; // Para outras propriedades do usuário
+}
+
+interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
+  loading: boolean;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -14,80 +28,56 @@ export const useAuth = () => {
   return context;
 };
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // Verificar se usuário já está logado ao carregar a página
   useEffect(() => {
-    const checkAuth = async () => {
-      const savedToken = localStorage.getItem('febic_token');
-      const savedUser = localStorage.getItem('febic_user');
+    const savedToken = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
 
-      if (savedToken && savedUser) {
-        try {
-          // Verificar se token ainda é válido
-          const isValid = await authService.verifyToken();
-          if (isValid) {
-            setToken(savedToken);
-            setUser(JSON.parse(savedUser));
-          } else {
-            // Token inválido, limpar dados
-            localStorage.removeItem('febic_token');
-            localStorage.removeItem('febic_user');
-          }
-        } catch (error) {
-          console.error('Erro ao verificar autenticação:', error);
-          localStorage.removeItem('febic_token');
-          localStorage.removeItem('febic_user');
-        }
+    if (savedToken && savedUser) {
+      try {
+        setToken(savedToken);
+        setUser(JSON.parse(savedUser) as User);
+      } catch (error) {
+        console.error('Erro ao recuperar dados salvos:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       }
-      
-      setLoading(false);
-    };
-
-    checkAuth();
+    }
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
+    
+    const response = await authService.login({ email, password });
+    
+    if (response.success && response.data) {
+      const { user: userData, token: userToken } = response.data;
       
-      const response = await authService.login({ email, password });
+      localStorage.setItem('token', userToken);
+      localStorage.setItem('user', JSON.stringify(userData));
       
-      if (response.success) {
-        const { user: userData, token: userToken } = response.data;
-        
-        // Salvar no localStorage
-        localStorage.setItem('febic_token', userToken);
-        localStorage.setItem('febic_user', JSON.stringify(userData));
-        
-        // Atualizar estado
-        setUser(userData);
-        setToken(userToken);
-        
-        toast.success(`Bem-vindo(a), ${userData.name}!`);
-        return true;
-      } else {
-        toast.error(response.message || 'Erro no login');
-        return false;
-      }
-    } catch (error: any) {
-      console.error('Erro no login:', error);
+      setUser(userData); // Remove o 'as User'
+      setToken(userToken);
       
-      const errorMessage = error.response?.data?.message || 'Erro no login';
-      toast.error(errorMessage);
-      
+      toast.success(`Bem-vindo(a)!`);
+      return true;
+    } else {
+      toast.error(response.message || 'Erro no login');
       return false;
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error('Erro no login:', error);
+    toast.error('Erro ao fazer login');
+    return false;
+  } finally {
+    setLoading(false);
+  }
+};
 
   const logout = () => {
     authService.logout();
