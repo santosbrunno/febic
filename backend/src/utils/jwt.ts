@@ -1,12 +1,15 @@
 import jwt from 'jsonwebtoken';
-import { UserRole} from '@prisma/client';
+import { UserRole } from '@prisma/client';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
 
 export interface JWTPayload {
-  userId: string;  // Mudou de number para string
+  userId: string;
   email: string;
-  role: UserRole;  // Mudou de string para UserRole enum
+  role: UserRole;
 }
 
 export const generateToken = (payload: JWTPayload): string => {

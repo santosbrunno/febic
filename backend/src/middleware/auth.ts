@@ -3,14 +3,13 @@ import jwt from 'jsonwebtoken';
 
 export interface AuthRequest extends Request {
   user?: {
-    userId: string;  // ✅ Corrigido para string (CUID)
+    userId: string;
     email: string;
     role: string;
   };
 }
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
-  console.log('🔐 MIDDLEWARE AUTH: Verificando token...');
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -30,7 +29,7 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     }
 
     req.user = {
-      userId: String(decoded.userId),  // ✅ Garantir que seja string
+      userId: String(decoded.userId),
       email: decoded.email,
       role: decoded.role
     };
@@ -47,7 +46,7 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
     });
   }
 
-  if (req.user.role !== 'ADMINISTRADOR') {  // ✅ Usar enum correto
+  if (req.user.role !== 'ADMINISTRADOR') {
     return res.status(403).json({
       success: false,
       message: 'Acesso negado. Apenas administradores.'
@@ -57,7 +56,6 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
   next();
 };
 
-// ✅ NOVA FUNÇÃO: requireRole para múltiplos roles
 export const requireRole = (allowedRoles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
@@ -67,7 +65,6 @@ export const requireRole = (allowedRoles: string[]) => {
       });
     }
 
-    // Mapear roles antigos para novos se necessário
     const roleMap: { [key: string]: string } = {
       'ADMIN': 'ADMINISTRADOR',
       'AUTHOR': 'AUTOR',
@@ -88,11 +85,6 @@ export const requireRole = (allowedRoles: string[]) => {
   };
 };
 
-// ✅ Middleware específico para administradores (usando requireRole)
 export const requireAdministrator = requireRole(['ADMINISTRADOR']);
-
-// ✅ Middleware para autor ou admin
 export const requireAuthorOrAdmin = requireRole(['AUTOR', 'ADMINISTRADOR']);
-
-// ✅ Middleware para avaliador ou admin  
 export const requireEvaluatorOrAdmin = requireRole(['AVALIADOR', 'ADMINISTRADOR']);
