@@ -1,4 +1,3 @@
-
 import Joi from 'joi';
 import { Category, ProjectStatus } from '@prisma/client';
 
@@ -211,7 +210,9 @@ export const createProjectSchema = Joi.object({
   exemptionReason: Joi.string().allow('').optional()
 });
 
+// ✅ SCHEMA DE UPDATE CORRIGIDO
 export const updateProjectSchema = Joi.object({
+  // Campos básicos do projeto (todos opcionais para update)
   title: Joi.string()
     .min(10)
     .max(500)
@@ -220,7 +221,8 @@ export const updateProjectSchema = Joi.object({
       'string.max': 'Título deve ter no máximo 500 caracteres'
     }),
     
-  abstract: Joi.string()
+  // ✅ CORRIGIDO: summary em vez de abstract
+  summary: Joi.string()
     .min(50)
     .max(3000)
     .messages({
@@ -228,11 +230,114 @@ export const updateProjectSchema = Joi.object({
       'string.max': 'Resumo deve ter no máximo 3000 caracteres'
     }),
     
+  // ✅ ADICIONADOS: campos que o frontend envia
+  objective: Joi.string()
+    .min(20)
+    .max(2000)
+    .messages({
+      'string.min': 'Objetivo deve ter pelo menos 20 caracteres',
+      'string.max': 'Objetivo deve ter no máximo 2000 caracteres'
+    }),
+    
+  methodology: Joi.string()
+    .min(50)
+    .max(3000)
+    .messages({
+      'string.min': 'Metodologia deve ter pelo menos 50 caracteres',
+      'string.max': 'Metodologia deve ter no máximo 3000 caracteres'
+    }),
+    
+  results: Joi.string()
+    .allow('')
+    .max(3000)
+    .messages({
+      'string.max': 'Resultados deve ter no máximo 3000 caracteres'
+    }),
+    
+  conclusion: Joi.string()
+    .allow('')
+    .max(2000)
+    .messages({
+      'string.max': 'Conclusão deve ter no máximo 2000 caracteres'
+    }),
+    
+  bibliography: Joi.string()
+    .allow('')
+    .max(5000)
+    .messages({
+      'string.max': 'Bibliografia deve ter no máximo 5000 caracteres'
+    }),
+    
+  // ✅ ADICIONADO: keywords que o frontend envia
+  keywords: Joi.array()
+    .items(Joi.string().max(50))
+    .max(10)
+    .messages({
+      'array.max': 'Máximo de 10 palavras-chave permitidas'
+    }),
+    
+  researchLine: Joi.string()
+    .allow('')
+    .max(200)
+    .messages({
+      'string.max': 'Linha de pesquisa deve ter no máximo 200 caracteres'
+    }),
+    
   category: Joi.string()
     .valid(...validCategories)
     .messages({
       'any.only': 'Categoria inválida'
-    })
+    }),
+    
+  areaConhecimentoId: Joi.string()
+    .messages({
+      'string.base': 'Área de conhecimento deve ser uma string válida'
+    }),
+    
+  // Dados institucionais (opcionais no update)
+  institution: Joi.string()
+    .min(3)
+    .max(200)
+    .messages({
+      'string.min': 'Instituição deve ter pelo menos 3 caracteres',
+      'string.max': 'Instituição deve ter no máximo 200 caracteres'
+    }),
+    
+  institutionCity: Joi.string()
+    .max(100)
+    .allow('')
+    .messages({
+      'string.max': 'Cidade deve ter no máximo 100 caracteres'
+    }),
+    
+  institutionState: Joi.string()
+    .max(2)
+    .allow('')
+    .messages({
+      'string.max': 'Estado deve ter no máximo 2 caracteres'
+    }),
+    
+  institutionCountry: Joi.string()
+    .max(100)
+    .default('Brasil')
+    .messages({
+      'string.max': 'País deve ter no máximo 100 caracteres'
+    }),
+    
+  // Características da escola/projeto
+  isPublicSchool: Joi.boolean(),
+  isRuralSchool: Joi.boolean(),
+  isIndigenous: Joi.boolean(),
+  hasDisability: Joi.boolean(),
+  socialVulnerability: Joi.boolean(),
+  
+  // Campos de pagamento
+  paymentRequired: Joi.boolean(),
+  isPaymentExempt: Joi.boolean(),
+  exemptionReason: Joi.string().allow('').max(1000)
+  
+}).min(1).messages({
+  'object.min': 'Pelo menos um campo deve ser fornecido para atualização'
 });
 
 export const updateStatusSchema = Joi.object({

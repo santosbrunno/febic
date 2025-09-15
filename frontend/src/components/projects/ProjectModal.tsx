@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, User, Calendar, Tag, FileText, CheckCircle, Clock, XCircle, Edit } from 'lucide-react';
 import { Project, PROJECT_CATEGORIES, PROJECT_STATUS } from '../../types/Project';
@@ -9,8 +8,8 @@ interface ProjectDetailModalProps {
   project: Project;
   onClose: () => void;
   onEdit?: (project: Project) => void;
-  onSubmit?: (id: number) => void;
-  onUpdateStatus?: (id: number, status: string) => void;
+  onSubmit?: (id: string) => void; // ✅ CORRIGIDO: string em vez de number
+  onUpdateStatus?: (id: string, status: string) => void; // ✅ CORRIGIDO: string em vez de number
 }
 
 const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
@@ -21,21 +20,55 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   onUpdateStatus
 }) => {
   const { user } = useAuth();
-  const isAuthor = user?.id === project.authorId;
-  const isAdmin = user?.role === 'ADMIN';
+  
+  // ✅ CORRIGIDO: Debug para ver estrutura do projeto
+  console.log('🔍 DEBUG - Projeto recebido no modal:', project);
+  console.log('🔍 DEBUG - Chaves do projeto:', project ? Object.keys(project) : 'project é null/undefined');
+  console.log('🔍 DEBUG - Owner do projeto:', project?.owner);
+  console.log('🔍 DEBUG - User atual:', user);
 
-  const categoryLabel = PROJECT_CATEGORIES.find(cat => cat.value === project.category)?.label || project.category;
-  const statusConfig = PROJECT_STATUS.find(s => s.value === project.status);
+  // ✅ CORRIGIDO: owner em vez de author, ownerId em vez de authorId
+  const isAuthor = user?.id === project?.ownerId;
+  const isAdmin = user?.role === 'ADMINISTRADOR'; // ✅ CORRIGIDO: ADMINISTRADOR em vez de ADMIN
 
-  const canEdit = isAuthor && project.status === 'DRAFT';
-  const canSubmit = isAuthor && project.status === 'DRAFT';
-  const canUpdateStatus = isAdmin && project.status === 'SUBMITTED';
+  const categoryLabel = PROJECT_CATEGORIES.find(cat => cat.value === project?.category)?.label || project?.category;
+  const statusConfig = PROJECT_STATUS.find(s => s.value === project?.status);
+
+  // ✅ CORRIGIDO: status do schema Prisma
+  const canEdit = isAuthor && project?.status === 'RASCUNHO';
+  const canSubmit = isAuthor && project?.status === 'RASCUNHO';
+  const canUpdateStatus = isAdmin && project?.status === 'SUBMETIDO';
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
   };
+
+  // ✅ ADICIONADO: Proteção se project for null/undefined
+  if (!project) {
+    console.error('❌ Projeto não fornecido para o modal');
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl p-6 max-w-md w-full">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Erro ao carregar projeto
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Os dados do projeto não foram carregados corretamente.
+            </p>
+            <button
+              onClick={onClose}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -53,8 +86,13 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  <span className="font-medium">{project.author.name}</span>
-                  <span className="text-gray-400">({project.author.email})</span>
+                  {/* ✅ CORRIGIDO: owner em vez de author, com fallback de segurança */}
+                  <span className="font-medium">
+                    {project.owner?.name || 'Nome não disponível'}
+                  </span>
+                  <span className="text-gray-400">
+                    ({project.owner?.email || 'Email não disponível'})
+                  </span>
                 </div>
               </div>
             </div>
@@ -66,6 +104,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                   statusConfig?.color === 'blue' ? 'bg-blue-100 text-blue-800' :
                   statusConfig?.color === 'green' ? 'bg-green-100 text-green-800' :
                   statusConfig?.color === 'red' ? 'bg-red-100 text-red-800' :
+                  statusConfig?.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
                   'bg-gray-100 text-gray-800'
                 }`}
               >
@@ -80,7 +119,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Informações */}
+          {/* Informações básicas */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="space-y-4">
               <div>
@@ -118,20 +157,80 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                   <FileText className="w-4 h-4" />
                   ID do Projeto
                 </div>
-                <p className="text-gray-900">#{project.id}</p>
+                <p className="text-gray-900 font-mono text-sm">#{project.id}</p>
               </div>
             </div>
           </div>
+
+          {/* ✅ ADICIONADO: Informações adicionais se disponíveis */}
+          {(project.institution || project.areaConhecimento) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 p-4 bg-gray-50 rounded-lg">
+              {project.institution && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-1">Instituição</h4>
+                  <p className="text-gray-900">{project.institution}</p>
+                </div>
+              )}
+              
+              {project.areaConhecimento && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-1">Área de Conhecimento</h4>
+                  <p className="text-gray-900">{project.areaConhecimento.nome}</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Resumo */}
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Resumo do Projeto</h3>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {project.abstract}
+                {/* ✅ CORRIGIDO: summary em vez de abstract */}
+                {project.summary || 'Resumo não disponível'}
               </p>
             </div>
           </div>
+
+          {/* ✅ ADICIONADO: Seções adicionais se disponíveis */}
+          {project.objective && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Objetivo</h3>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {project.objective}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {project.methodology && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Metodologia</h3>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {project.methodology}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ✅ ADICIONADO: Palavras-chave se disponíveis */}
+          {project.keywords && project.keywords.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Palavras-chave</h3>
+              <div className="flex flex-wrap gap-2">
+                {project.keywords.map((keyword, index) => (
+                  <span
+                    key={index}
+                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                  >
+                    {keyword}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Ações */}
           <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
@@ -158,18 +257,18 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             {canUpdateStatus && onUpdateStatus && (
               <>
                 <button
-                  onClick={() => onUpdateStatus(project.id, 'APPROVED')}
+                  onClick={() => onUpdateStatus(project.id, 'APROVADO_CIAS')}
                   className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
                 >
                   <CheckCircle className="w-4 h-4" />
                   Aprovar
                 </button>
                 <button
-                  onClick={() => onUpdateStatus(project.id, 'REJECTED')}
+                  onClick={() => onUpdateStatus(project.id, 'REPROVADO_CIAS')}
                   className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
                 >
                   <XCircle className="w-4 h-4" />
-                  Rejeitar
+                  Reprovar
                 </button>
               </>
             )}

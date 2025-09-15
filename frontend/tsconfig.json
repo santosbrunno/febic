@@ -17,6 +17,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "../backend/src/controllers", "../backend/src/middleware/middleware", "../backend/src/middleware/authMiddleware.ts"],
+  "include": ["src", "../backend/src/controllers", "../backend/src/middleware/middleware", "../backend/src/middleware/authMiddleware.ts", "../backend/src/controllers/evaluationsController.ts"],
   "exclude": ["node_modules", "dist"]
 }
